@@ -1,6 +1,6 @@
 # Reads departures from a selected Another MVG sensor or a structured Home Assistant template sensor.
 id: mvg_departures
-version: 0.1.8
+version: 0.1.9
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
@@ -42,3 +42,14 @@ tiles:
       departure_time_2: { path: "departures[1].expected_departure" }
     example: probe_example
     preview: { badge: "{line_1}", title: "{destination_1}", value: "{departure_time_1}" }
+    options:
+      - id: transport_modes
+        kind: choice
+        multiple: 4
+        label: transport_modes
+        hint: transport_modes_hint
+        choices:
+          - { value: bus, label: mode_bus }
+          - { value: u_bahn, label: mode_u_bahn }
+          - { value: s_bahn, label: mode_s_bahn }
+          - { value: tram, label: mode_tram }
