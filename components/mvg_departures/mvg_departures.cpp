@@ -1,4 +1,5 @@
 #include "mvg_departures.h"
+#include <cstdio>
 #include <string>
 
 namespace esphome::mvg_departures {
