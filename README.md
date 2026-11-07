@@ -13,7 +13,7 @@ Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor 
 
 ## Template-Sensor
 
-Die Quelle in diesem Beispiel ist `sensor.mvg_pappelallee`; ersetze sie durch deine Another-MVG-Entität. Wenn es bereits einen `template:`-Abschnitt in deiner Konfiguration gibt, ergänze den Sensor dort, statt einen zweiten Abschnitt anzulegen.
+Die Quelle in diesem Beispiel ist `sensor.another_mvg_departures`; ersetze sie durch deine Another-MVG-Entität. Wenn es bereits einen `template:`-Abschnitt in deiner Konfiguration gibt, ergänze den Sensor dort, statt einen zweiten Abschnitt anzulegen.
 
 ```yaml
 template:
@@ -21,9 +21,9 @@ template:
       - name: "MVG Abfahrten für Tessera"
         unique_id: mvg_departures_for_tessera
         state: >
-          {{ (state_attr('sensor.mvg_pappelallee', 'departures') or []) | count }}
+          {{ (state_attr('sensor.another_mvg_departures', 'departures') or []) | count }}
         attributes: >
-          {% set source = state_attr('sensor.mvg_pappelallee', 'departures') or [] %}
+          {% set source = state_attr('sensor.another_mvg_departures', 'departures') or [] %}
           {% set ns = namespace(rows=[]) %}
           {% for d in source %}
             {% set route = ((d.get('transport_type', '') or '') ~ ' ' ~ (d.get('label', '') or '')) | trim %}
