@@ -210,8 +210,7 @@ class NextDepartureTile : public tessera::Tile {
   }
 
   void on_tick(uint32_t) override {
-    ui::set_text(title_, !custom_name_.empty() ? custom_name_ :
-                           !entity_name_.empty() ? entity_name_ : "Abfahrten");
+    ui::set_text(title_, !custom_name_.empty() ? custom_name_ : "Abfahrten");
     const size_t capacity = rows_.size();
     if (departures_.empty()) {
       clear_cells(rows_[0]);
