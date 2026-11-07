@@ -466,7 +466,10 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
     }
   }
-  std::string custom_name_, entity_name_, station_name_, state_, wait_;\n  std::vector<std::string> manual_modes_;\n  lv_obj_t *mode_icons_[4]{};\n  int tile_width_{};
+  std::string custom_name_, entity_name_, station_name_, state_, wait_;
+  std::vector<std::string> manual_modes_;
+  lv_obj_t *mode_icons_[4]{};
+  int tile_width_{};
   std::vector<Departure> departures_;
   std::vector<DepartureRow> rows_;
   lv_obj_t *title_{};
