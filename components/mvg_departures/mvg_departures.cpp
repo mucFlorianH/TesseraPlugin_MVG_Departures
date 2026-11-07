@@ -65,7 +65,8 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_size(header_bg_, c.width + ui::px(16), header_h + ui::px(8));
       lv_obj_set_pos(header_bg_, -ui::px(8), header_y - ui::px(4));
       lv_obj_set_style_radius(header_bg_, 0, 0);
-      const int header_text_y = header_y + ui::px(2);\n      header_line_ = make_label(c.parent, "Linie", 0, header_text_y, line_col, header_h,
+      const int header_text_y = header_y + ui::px(2);
+      header_line_ = make_label(c.parent, "Linie", 0, header_text_y, line_col, header_h,
                                 Font::BODY_LARGE, theme::INK);
       if (destination_w >= ui::px(42))
         header_destination_ = make_label(c.parent, "Ziel", destination_x, header_text_y,
@@ -125,7 +126,8 @@ class NextDepartureTile : public tessera::Tile {
       const int main_time_w = std::max(ui::px(40), delay_x_ - time_x_ - ui::px(2));
       row.time = make_label(c.parent, "", time_x_, time_y, main_time_w, actual_time_h,
                             time_font, theme::INK);
-      lv_obj_set_style_text_align(row.time, LV_TEXT_ALIGN_RIGHT, 0);\n      row.delay = make_label(c.parent, "", delay_x_, time_y + (actual_time_h - row_body_h) / 2,
+      lv_obj_set_style_text_align(row.time, LV_TEXT_ALIGN_RIGHT, 0);
+      row.delay = make_label(c.parent, "", delay_x_, time_y + (actual_time_h - row_body_h) / 2,
                              delay_w_, row_body_h, Font::BODY, theme::MUTED);
       row.summary = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY, theme::INK);
       lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
@@ -134,10 +136,17 @@ class NextDepartureTile : public tessera::Tile {
     }
 
     // Small transport markers beside the title. Empty selection means automatic detection.
+    const int icon_widths[] = {40, 32, 32, 52};
     for (int i = 0; i < 4; ++i) {
-      mode_icons_[i] = ui::label(c.parent, Font::BODY, theme::ACCENT);
-      lv_obj_set_size(mode_icons_[i], i == 0 ? ui::px(34) : ui::px(24), ui::line_height(Font::BODY));
+      const Font icon_font = (i == 1 || i == 2) ? Font::HEADLINE : Font::BODY_LARGE;
+      mode_icons_[i] = ui::label(c.parent, icon_font, theme::ACCENT);
+      const int icon_h = std::min(ui::px(32), title_h);
+      lv_obj_set_size(mode_icons_[i], ui::px(icon_widths[i]), icon_h);
       lv_obj_set_style_text_align(mode_icons_[i], LV_TEXT_ALIGN_CENTER, 0);
+      lv_obj_set_style_pad_top(mode_icons_[i],
+                               std::max(0, (icon_h - ui::line_height(icon_font)) / 2), 0);
+      lv_obj_set_style_border_width(mode_icons_[i], ui::px(1), 0);
+      lv_obj_set_style_border_color(mode_icons_[i], lv_color_hex(0xFFFFFF), 0);
       lv_obj_add_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
     }
     JsonArrayConst selected = c.options["transport_modes"].as<JsonArrayConst>();
@@ -304,6 +313,9 @@ class NextDepartureTile : public tessera::Tile {
     }
     const char *labels[] = {"BUS", "U", "S", "Tram"};
     const char *keys[] = {"bus", "u_bahn", "s_bahn", "tram"};
+    const int widths[] = {40, 32, 32, 52};
+    const uint32_t fills[] = {0x005B67, 0x126EAF, 0x4D9345, 0xF20D2A};
+    int x = 0;
     int shown = 0;
     for (int i = 0; i < 4; ++i) {
       const bool visible = std::find(modes.begin(), modes.end(), keys[i]) != modes.end();
@@ -311,7 +323,7 @@ class NextDepartureTile : public tessera::Tile {
       if (visible) {
         lv_obj_clear_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
         const int w = ui::px(widths[i]);
-        const int h = std::min(ui::px(heights[i]), ui::line_height(title_font_));
+        const int h = std::min(ui::px(32), ui::line_height(title_font_));
         lv_obj_set_size(mode_icons_[i], w, h);
         lv_obj_set_pos(mode_icons_[i], x, (ui::line_height(title_font_) - h) / 2);
         lv_obj_set_style_radius(mode_icons_[i], (i == 0 || i == 2) ? h / 2 : ui::px(4), 0);
