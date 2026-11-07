@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.22 - 2026-11-07
+- Place delay directly after the expected departure time and move the track column to its right.
+- Hide station and table headings in one-column layouts; give the route badge more room.
+
+
 ## 0.1.21 - 2026-11-07
 - Extend the table header through the tile padding, right-align its departure heading, and tighten the track column.
 - Use smaller bus and wider tram markers; disable tap feedback for the display-only tile.
