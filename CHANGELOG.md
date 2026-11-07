@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.21 - 2026-11-07
+- Extend the table header through the tile padding, right-align its departure heading, and tighten the track column.
+- Use smaller bus and wider tram markers; disable tap feedback for the display-only tile.
+- Remove planned-time data and show delay before the expected time, updating both from sensor changes.
+
+
 ## 0.1.20 - 2026-11-07
 - Matched transport markers more closely to the MVG app and centered them beside the station title.
 - Extended the table header band and right-aligned departure times.
