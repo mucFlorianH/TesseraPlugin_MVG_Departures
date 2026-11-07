@@ -1,6 +1,7 @@
 #include "mvg_departures.h"
 #include "mvg_colors.h"
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -455,7 +456,7 @@ class NextDepartureTile : public tessera::Tile {
 
     const int delay = delay_minutes(d);
     ui::set_text(row.time, d.expected);
-    if (delay != 0 && delay_w_ >= ui::px(22)) {
+    if (delay != 0 && delay_w_ >= ui::px(38)) {
       ui::set_text(row.delay, std::string("(") + (delay > 0 ? "+" : "") +
                                std::to_string(delay) + ")");
       lv_obj_clear_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
