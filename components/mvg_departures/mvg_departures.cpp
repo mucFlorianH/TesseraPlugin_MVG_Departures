@@ -34,6 +34,7 @@ class NextDepartureTile : public tessera::Tile {
 
   void create(const tessera::TileContext &c) override {
     custom_name_ = c.name ? c.name : "";
+    tile_width_ = c.width;
     narrow_ = c.columns <= 1 || c.width < ui::px(460);
     single_line_ = c.rows <= 1 || c.height < ui::px(90);
     compact_ = narrow_ || c.height < ui::px(210);
@@ -220,8 +221,11 @@ class NextDepartureTile : public tessera::Tile {
 
   void on_tick(uint32_t) override {
     const bool custom_title = !custom_name_.empty() && custom_name_ != entity_name_;
-    ui::set_text(title_, !station_name_.empty() ? station_name_ :
-                           custom_title ? custom_name_ : "Abfahrten");
+    if (!single_line_ && title_) {
+      ui::set_text(title_, !station_name_.empty() ? station_name_ :
+                             custom_title ? custom_name_ : "Abfahrten");
+      update_mode_icons();
+    }
     const size_t capacity = rows_.size();
     if (departures_.empty()) {
       clear_cells(rows_[0]);
@@ -256,11 +260,12 @@ class NextDepartureTile : public tessera::Tile {
   }
   void on_theme() override {
     ui::set_color(title_, theme::INK);
-    if (header_bg_) ui::set_fill(header_bg_, tessera::Tone::NORMAL, theme::ACCENT);
-    if (header_line_) ui::set_color(header_line_, theme::ON_ACCENT);
-    if (header_destination_) ui::set_color(header_destination_, theme::ON_ACCENT);
-    if (header_track_) ui::set_color(header_track_, theme::ON_ACCENT);
-    if (header_time_) ui::set_color(header_time_, theme::ON_ACCENT);
+    if (header_bg_) ui::set_fill(header_bg_, tessera::Tone::NORMAL, theme::TRACK);
+    if (header_line_) ui::set_color(header_line_, theme::INK);
+    if (header_destination_) ui::set_color(header_destination_, theme::INK);
+    if (header_track_) ui::set_color(header_track_, theme::INK);
+    if (header_time_) ui::set_color(header_time_, theme::INK);
+    update_mode_icons();
     const size_t capacity = rows_.size();
     const size_t visible = departures_.size() > capacity && capacity > 1
                                ? capacity - 1
@@ -281,6 +286,48 @@ class NextDepartureTile : public tessera::Tile {
   }
 
  private:
+  void update_mode_icons() {
+    if (!title_ || single_line_) return;
+    std::vector<std::string> modes;
+    if (!manual_modes_.empty()) {
+      modes = manual_modes_;
+    } else {
+      for (const auto &d : departures_) {
+        std::string type = d.type;
+        std::transform(type.begin(), type.end(), type.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        std::string mode;
+        if (type.find("bus") != std::string::npos || type.find("express") != std::string::npos) mode = "bus";
+        else if (type.find("u") != std::string::npos || type.find("subway") != std::string::npos) mode = "u_bahn";
+        else if (type.find("s") != std::string::npos || type.find("commuter") != std::string::npos) mode = "s_bahn";
+        else if (type.find("tram") != std::string::npos || type.find("streetcar") != std::string::npos) mode = "tram";
+        if (!mode.empty() && std::find(modes.begin(), modes.end(), mode) == modes.end()) modes.push_back(mode);
+      }
+    }
+    const char *labels[] = {"B", "U", "S", "T"};
+    const char *keys[] = {"bus", "u_bahn", "s_bahn", "tram"};
+    int shown = 0;
+    for (int i = 0; i < 4; ++i) {
+      const bool visible = std::find(modes.begin(), modes.end(), keys[i]) != modes.end();
+      if (!mode_icons_[i]) continue;
+      if (visible) {
+        lv_obj_clear_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_pos(mode_icons_[i], shown * ui::px(27), 0);
+        lv_obj_set_style_radius(mode_icons_[i], ui::px(12), 0);
+        lv_obj_set_style_bg_opa(mode_icons_[i], LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_color(mode_icons_[i], lv_color_hex(0x1677C8), 0);
+        lv_obj_set_style_text_color(mode_icons_[i], lv_color_hex(0xFFFFFF), 0);
+        ui::set_text(mode_icons_[i], labels[i]);
+        ++shown;
+      } else {
+        lv_obj_add_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
+      }
+    }
+    const int offset = shown ? shown * ui::px(27) + ui::px(6) : 0;
+    lv_obj_set_pos(title_, offset, 0);
+    lv_obj_set_width(title_, std::max(1, tile_width_ - offset));
+  }
+
   static lv_obj_t *make_label(lv_obj_t *parent, const char *text, int x, int y, int width, int height,
                               Font font, theme::Role color) {
     lv_obj_t *label = ui::label(parent, font, color);
@@ -439,7 +486,7 @@ class NextDepartureTile : public tessera::Tile {
       if (row.planned) { ui::set_text(row.planned, ""); lv_obj_add_flag(row.planned, LV_OBJ_FLAG_HIDDEN); }
     }
   }
-  std::string custom_name_, entity_name_, station_name_, state_, wait_;
+  std::string custom_name_, entity_name_, station_name_, state_, wait_;\n  std::vector<std::string> manual_modes_;\n  lv_obj_t *mode_icons_[4]{};\n  int tile_width_{};
   std::vector<Departure> departures_;
   std::vector<DepartureRow> rows_;
   lv_obj_t *title_{};
@@ -452,7 +499,7 @@ class NextDepartureTile : public tessera::Tile {
   int rows_y_{}, row_h_{};
   int line_col_{}, destination_x_{}, destination_w_{}, track_x_{}, track_w_{};
   int time_x_{}, time_w_{}, delay_x_{}, delay_w_{};
-  bool compact_{}, narrow_{};
+  bool compact_{}, narrow_{}, single_line_{};
 };
 
 void MvgDepartures::setup() {
