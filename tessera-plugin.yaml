@@ -1,6 +1,6 @@
-# Reads the departures attribute from a user-selected Another MVG sensor.
+# Reads generic departure fields from a user-selected Another MVG sensor.
 id: mvg_departures
-version: 0.1.2
+version: 0.1.3
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
@@ -19,7 +19,11 @@ tiles:
     sizes: { min: 1x1, max: 9x9 }
     memory: 500
     domains: [sensor]
-    attributes: [departures]
     has_attributes: [departures]
+    fields:
+      transport_type: { path: "departures[0].transport_type" }
+      line: { path: "departures[0].label" }
+      destination: { path: "departures[0].destination" }
+      departure_time: { path: "departures[0].expected_departure" }
     example: probe_example
-    preview: { badge: "{state}", title: "{name}" }
+    preview: { badge: "{line}", title: "{destination}", value: "{departure_time}" }
