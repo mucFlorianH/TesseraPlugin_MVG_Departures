@@ -5,9 +5,9 @@ namespace esphome::mvg_departures {
 using tessera::Font;
 namespace ui = tessera::ui;
 
-class ProbeTile : public tessera::Tile {
+class NextDepartureTile : public tessera::Tile {
  public:
-  explicit ProbeTile(const tessera::Plugin *plugin) : plugin_(plugin) {}
+  explicit NextDepartureTile(const tessera::Plugin *) {}
 
   void create(const tessera::TileContext &c) override {
     title_ = ui::label(c.parent, Font::TITLE, theme::INK);
@@ -19,30 +19,38 @@ class ProbeTile : public tessera::Tile {
   }
 
   void on_state(JsonObjectConst data) override {
-    state_ = data["state"] | "";
     name_ = data["name"] | "";
-    JsonArrayConst departures = data["attributes"]["departures"].as<JsonArrayConst>();
-    count_ = departures.size();
-    first_ = "";
-    if (!departures.isNull() && count_ > 0) {
-      JsonObjectConst first = departures[0].as<JsonObjectConst>();
-      const char *line = first["line"] | first["label"] | "?";
-      const char *to = first["destination"] | "";
-      first_ = std::string(line) + " → " + to;
-    }
+    state_ = data["state"] | "";
+    const JsonObjectConst attributes = data["attributes"];
+    transport_type_ = attributes["transport_type"] | "";
+    line_ = attributes["line"] | "";
+    destination_ = attributes["destination"] | "";
+    departure_time_ = attributes["departure_time"] | "";
     wait_ = data["wait"] | "";
   }
 
   void on_tick(uint32_t) override {
-    ui::set_text(title_, name_.empty() ? "Abfahrten" : name_);
+    ui::set_text(title_, name_.empty() ? "Nächste Abfahrt" : name_);
     std::string detail;
-    if (count_ > 0) {
-      detail = std::to_string(count_) + " Abfahrten empfangen";
-      if (!first_.empty()) detail += " · " + first_;
-    } else if (!wait_.empty()) {
+    if (!transport_type_.empty()) detail = transport_type_;
+    if (!line_.empty()) {
+      if (!detail.empty()) detail += " ";
+      detail += line_;
+    }
+    if (!destination_.empty()) {
+      if (!detail.empty()) detail += " → ";
+      detail += destination_;
+    }
+    if (!departure_time_.empty()) {
+      if (!detail.empty()) detail += " · ";
+      detail += departure_time_;
+    }
+    if (detail.empty() && !state_.empty()) {
+      detail = state_;
+    } else if (detail.empty() && !wait_.empty()) {
       detail = "Tessera: " + wait_;
-    } else {
-      detail = "Keine strukturierte departures-Liste empfangen";
+    } else if (detail.empty()) {
+      detail = "Keine nächste Abfahrt empfangen";
     }
     ui::set_text(detail_, detail);
   }
@@ -53,14 +61,12 @@ class ProbeTile : public tessera::Tile {
   }
 
  private:
-  const tessera::Plugin *plugin_;
   lv_obj_t *title_{}, *detail_{};
-  std::string state_, name_, first_, wait_;
-  size_t count_ = 0;
+  std::string name_, state_, transport_type_, line_, destination_, departure_time_, wait_;
 };
 
 void MvgDepartures::setup() {
-  add_tile("probe", [this]() { return new ProbeTile(this); });
+  add_tile("probe", [this]() { return new NextDepartureTile(this); });
 }
 
 }  // namespace esphome::mvg_departures
