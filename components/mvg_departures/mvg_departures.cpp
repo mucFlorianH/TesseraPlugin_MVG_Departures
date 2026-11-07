@@ -66,8 +66,9 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_style_radius(header_bg_, 0, 0);
       header_line_ = make_label(c.parent, "Linie", 0, header_y, line_col, header_h,
                                 Font::BODY_LARGE, theme::INK);
-      header_destination_ = make_label(c.parent, "Ziel", destination_x, header_y,
-                                       destination_w, header_h, Font::BODY_LARGE, theme::INK);
+      if (destination_w >= ui::px(42))
+        header_destination_ = make_label(c.parent, "Ziel", destination_x, header_y,
+                                          destination_w, header_h, Font::BODY_LARGE, theme::INK);
       if (!narrow_)
         header_track_ = make_label(c.parent, "Gleis", track_x, header_y, track_col - gap, header_h,
                                    Font::BODY_LARGE, theme::INK);
@@ -260,7 +261,7 @@ class NextDepartureTile : public tessera::Tile {
     }
   }
   void on_theme() override {
-    ui::set_color(title_, theme::INK);
+    if (title_) ui::set_color(title_, theme::INK);
     if (header_bg_) ui::set_fill(header_bg_, tessera::Tone::NORMAL, theme::TRACK);
     if (header_line_) ui::set_color(header_line_, theme::INK);
     if (header_destination_) ui::set_color(header_destination_, theme::INK);
@@ -434,7 +435,7 @@ class NextDepartureTile : public tessera::Tile {
     set_badge(row, d);
     ui::set_text(row.line, d.line.empty() ? d.type : d.line);
     // The line badge and the expected time stay visible in a one-row tile.
-    const bool show_destination = !single_line_ || destination_w_ >= ui::px(42);
+    const bool show_destination = destination_w_ >= ui::px(42);
     if (show_destination && row.destination) {
       lv_obj_clear_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
       ui::set_text(row.destination, d.destination);
