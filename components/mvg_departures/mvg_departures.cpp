@@ -12,7 +12,7 @@ using tessera::Font;
 namespace ui = tessera::ui;
 
 struct Departure {
-  std::string type, line, destination, track, expected, planned, delay, cancelled, summary;
+  std::string type, line, destination, track, expected, delay, cancelled, summary;
 };
 
 struct DepartureRow {
@@ -23,7 +23,6 @@ struct DepartureRow {
   lv_obj_t *track{};
   lv_obj_t *time{};
   lv_obj_t *delay{};
-  lv_obj_t *planned{};
   lv_obj_t *summary{};
   lv_obj_t *overflow{};
   lv_obj_t *separator{};
@@ -36,6 +35,15 @@ class NextDepartureTile : public tessera::Tile {
   void create(const tessera::TileContext &c) override {
     custom_name_ = c.name ? c.name : "";
     tile_width_ = c.width;
+    lv_obj_t *tile = lv_obj_get_parent(c.parent);
+    // This tile displays information only: do not give the tile a pressed visual state.
+    if (tile) lv_obj_remove_flag(tile, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(c.parent, LV_OBJ_FLAG_CLICKABLE);
+    // Tessera's drawing area excludes the card padding. Allow background bands to reach that edge.
+    lv_obj_add_flag(c.parent, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+    lv_obj_refresh_ext_draw_size(c.parent);
+    const int bleed_left = tile ? lv_obj_get_style_space_left(tile, LV_PART_MAIN) : 0;
+    const int bleed_right = tile ? lv_obj_get_style_space_right(tile, LV_PART_MAIN) : 0;
     narrow_ = c.columns <= 1 || c.width < ui::px(460);
     single_line_ = c.rows <= 1 || c.height < ui::px(90);
     compact_ = narrow_ || c.height < ui::px(210);
@@ -45,8 +53,8 @@ class NextDepartureTile : public tessera::Tile {
     const int gap = ui::px(6);
     const int body_h = ui::line_height(Font::BODY);
     const int line_col = c.width * (narrow_ ? 22 : 15) / 100;
-    const int track_col = narrow_ ? 0 : c.width * 13 / 100;
-    const int time_col = std::max(ui::px(64), c.width * (narrow_ ? 27 : 24) / 100);
+    const int track_col = narrow_ ? 0 : std::min(ui::px(56), c.width * 12 / 100);
+    const int time_col = std::max(ui::px(64), c.width * (narrow_ ? 30 : 32) / 100);
     const int time_x = c.width - time_col;
     const int destination_x = line_col + gap;
     const int track_x = time_x - track_col;
@@ -62,8 +70,8 @@ class NextDepartureTile : public tessera::Tile {
       const int header_h = ui::line_height(Font::BODY_LARGE);
       const int header_y = title_h + gap;
       header_bg_ = ui::block(c.parent, theme::TRACK);
-      lv_obj_set_size(header_bg_, c.width + ui::px(16), header_h + ui::px(8));
-      lv_obj_set_pos(header_bg_, -ui::px(8), header_y - ui::px(4));
+      lv_obj_set_size(header_bg_, c.width + bleed_left + bleed_right, header_h + ui::px(8));
+      lv_obj_set_pos(header_bg_, -bleed_left, header_y - ui::px(4));
       lv_obj_set_style_radius(header_bg_, 0, 0);
       const int header_text_y = header_y + ui::px(2);
       header_line_ = make_label(c.parent, "Linie", 0, header_text_y, line_col, header_h,
@@ -76,6 +84,7 @@ class NextDepartureTile : public tessera::Tile {
                                    Font::BODY_LARGE, theme::INK);
       header_time_ = make_label(c.parent, "Abfahrt", time_x, header_text_y, time_col, header_h,
                                 Font::BODY_LARGE, theme::INK);
+      lv_obj_set_style_text_align(header_time_, LV_TEXT_ALIGN_RIGHT, 0);
       rows_y_ = header_y + header_h + gap;
     } else {
       rows_y_ = 0;
@@ -92,8 +101,8 @@ class NextDepartureTile : public tessera::Tile {
     track_w_ = std::max(0, track_col - gap);
     time_x_ = time_x;
     time_w_ = time_col;
-    delay_x_ = time_x + time_col * 66 / 100;
-    delay_w_ = std::max(ui::px(20), time_x + time_col - delay_x_);
+    delay_x_ = time_x + time_col * 42 / 100;
+    delay_w_ = std::max(0, delay_x_ - time_x);
 
     int count = single_line_ ? 1 : std::max(1, (c.height - rows_y_) / std::max(1, row_h_));
     rows_.reserve(count);
@@ -136,9 +145,9 @@ class NextDepartureTile : public tessera::Tile {
     }
 
     // Small transport markers beside the title. Empty selection means automatic detection.
-    const int icon_widths[] = {40, 32, 32, 52};
+    const int icon_widths[] = {44, 32, 32, 60};
     for (int i = 0; i < 4; ++i) {
-      const Font icon_font = (i == 1 || i == 2) ? Font::HEADLINE : Font::BODY_LARGE;
+      const Font icon_font = (i == 1 || i == 2) ? Font::HEADLINE : Font::BODY;
       mode_icons_[i] = ui::label(c.parent, icon_font, theme::ACCENT);
       const int icon_h = std::min(ui::px(32), title_h);
       lv_obj_set_size(mode_icons_[i], ui::px(icon_widths[i]), icon_h);
@@ -171,7 +180,6 @@ class NextDepartureTile : public tessera::Tile {
       const JsonArrayConst destinations = attributes["departure_destination"].as<JsonArrayConst>();
       const JsonArrayConst tracks = attributes["departure_track"].as<JsonArrayConst>();
       const JsonArrayConst expected = attributes["departure_expected"].as<JsonArrayConst>();
-      const JsonArrayConst planned = attributes["departure_planned"].as<JsonArrayConst>();
       const JsonArrayConst delays = attributes["departure_delay"].as<JsonArrayConst>();
       const JsonArrayConst cancelled = attributes["departure_cancelled"].as<JsonArrayConst>();
       for (size_t i = 0; i < lines.size(); ++i) {
@@ -181,7 +189,6 @@ class NextDepartureTile : public tessera::Tile {
         d.destination = array_text(destinations, i);
         d.track = array_text(tracks, i);
         d.expected = array_text(expected, i);
-        d.planned = array_text(planned, i);
         d.delay = array_text(delays, i);
         d.cancelled = array_text(cancelled, i);
         if (!d.line.empty() || !d.destination.empty() || !d.expected.empty()) departures_.push_back(d);
@@ -207,7 +214,6 @@ class NextDepartureTile : public tessera::Tile {
           d.destination = item["destination"] | "";
           d.track = item["track"] | "";
           d.expected = item["expected_departure"] | "";
-          d.planned = item["planned_departure"] | "";
           d.delay = array_text(item["delay"]);
           d.cancelled = array_text(item["cancelled"]);
           departures_.push_back(d);
@@ -283,7 +289,6 @@ class NextDepartureTile : public tessera::Tile {
       if (row.track) ui::set_color(row.track, theme::INK);
       if (row.time) ui::set_color(row.time, theme::INK);
       if (row.delay) ui::set_color(row.delay, theme::MUTED);
-      if (row.planned) ui::set_color(row.planned, theme::MUTED);
       if (row.summary) ui::set_color(row.summary, theme::INK);
       if (row.overflow) ui::set_color(row.overflow, theme::MUTED);
       if (i < visible && row.badge) set_badge(row, departures_[i]);
@@ -421,7 +426,6 @@ class NextDepartureTile : public tessera::Tile {
     if (row.track) { ui::set_text(row.track, ""); lv_obj_add_flag(row.track, LV_OBJ_FLAG_HIDDEN); }
     if (row.time) { ui::set_text(row.time, ""); lv_obj_add_flag(row.time, LV_OBJ_FLAG_HIDDEN); }
     if (row.delay) { ui::set_text(row.delay, ""); lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN); }
-    if (row.planned) { ui::set_text(row.planned, ""); lv_obj_add_flag(row.planned, LV_OBJ_FLAG_HIDDEN); }
     if (row.summary) { ui::set_text(row.summary, ""); lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN); }
     if (row.badge) lv_obj_add_flag(row.badge, LV_OBJ_FLAG_HIDDEN);
   }
@@ -461,6 +465,7 @@ class NextDepartureTile : public tessera::Tile {
 
     ui::set_color(row.time, theme::INK);
     if (cancelled(d)) {
+      lv_obj_set_pos(row.time, time_x_, row.y + (row_h_ - lv_obj_get_height(row.time)) / 2);
       lv_obj_set_width(row.time, time_w_);
       ui::set_text(row.time, "Entfällt");
       ui::set_text(row.delay, "");
@@ -471,13 +476,15 @@ class NextDepartureTile : public tessera::Tile {
 
     const int delay = delay_minutes(d);
     const bool show_delay = delay != 0 && delay_w_ >= ui::px(38);
-    lv_obj_set_width(row.time, show_delay
-        ? std::max(ui::px(40), delay_x_ - time_x_ - ui::px(2))
-        : time_w_);
+    lv_obj_set_pos(row.time, show_delay ? delay_x_ : time_x_,
+                   row.y + (row_h_ - lv_obj_get_height(row.time)) / 2);
+    lv_obj_set_width(row.time, show_delay ? time_w_ - delay_w_ : time_w_);
     ui::set_text(row.time, d.expected);
     if (show_delay) {
+      lv_obj_set_pos(row.delay, time_x_, row.y + (row_h_ - ui::line_height(Font::BODY)) / 2);
+      lv_obj_set_width(row.delay, delay_w_);
       ui::set_text(row.delay, std::string("(") + (delay > 0 ? "+" : "") +
-                               std::to_string(delay) + ")");
+                               std::to_string(delay) + ") ");
       lv_obj_clear_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
       ui::set_tone(row.delay, delay > 0 ? tessera::Tone::ALERT : tessera::Tone::GOOD, theme::MUTED);
     } else {
