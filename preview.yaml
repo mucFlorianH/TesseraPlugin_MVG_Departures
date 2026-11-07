@@ -19,5 +19,15 @@ states:
           delay: 0
           trainType: ""
           time_diff: 491
+        - transport_type: BUS
+          label: "175"
+          destination: Another example destination
+          track: Bus
+          planned_departure: "10:31"
+          expected_departure: "10:31"
+          cancelled: false
+          delay: 0
+          trainType: ""
+          time_diff: 731
 
 time_zone: Europe/Berlin
