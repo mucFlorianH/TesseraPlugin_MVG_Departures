@@ -21,7 +21,7 @@ class NextDepartureTile : public tessera::Tile {
   void on_state(JsonObjectConst data) override {
     name_ = data["name"] | "";
     state_ = data["state"] | "";
-    const JsonObjectConst attributes = data["attributes"];
+    const JsonObjectConst attributes = data["attributes"].as<JsonObjectConst>();
     transport_type_ = attributes["transport_type"] | "";
     line_ = attributes["line"] | "";
     destination_ = attributes["destination"] | "";
