@@ -1,6 +1,6 @@
 # Reads departures from a selected Another MVG sensor or a structured Home Assistant template sensor.
 id: mvg_departures
-version: 0.1.20
+version: 0.1.21
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
@@ -26,7 +26,6 @@ tiles:
       - departure_destination
       - departure_track
       - departure_expected
-      - departure_planned
       - departure_delay
       - departure_cancelled
       - station_name
