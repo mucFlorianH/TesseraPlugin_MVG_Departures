@@ -32,7 +32,6 @@ class NextDepartureTile : public tessera::Tile {
 
   void create(const tessera::TileContext &c) override {
     custom_name_ = c.name ? c.name : "";
-    width_ = c.width;
     compact_ = c.width < ui::px(380) || c.height < ui::px(210);
 
     title_ = ui::label(c.parent, Font::TITLE, theme::INK);
@@ -213,21 +212,21 @@ class NextDepartureTile : public tessera::Tile {
 
   void on_theme() override {
     ui::set_color(title_, theme::INK);
-    ui::set_color(header_line_, theme::SUBTLE);
-    ui::set_color(header_destination_, theme::SUBTLE);
-    ui::set_color(header_track_, theme::SUBTLE);
-    ui::set_color(header_time_, theme::SUBTLE);
+    if (header_line_) ui::set_color(header_line_, theme::SUBTLE);
+    if (header_destination_) ui::set_color(header_destination_, theme::SUBTLE);
+    if (header_track_) ui::set_color(header_track_, theme::SUBTLE);
+    if (header_time_) ui::set_color(header_time_, theme::SUBTLE);
     for (size_t i = 0; i < rows_.size(); ++i) {
       DepartureRow &row = rows_[i];
       ui::set_fill(row.separator, tessera::Tone::NORMAL, theme::LINE);
-      ui::set_color(row.line, theme::SLATE);
-      ui::set_color(row.destination, theme::INK);
-      ui::set_color(row.track, theme::INK);
-      ui::set_color(row.time, theme::INK);
-      ui::set_color(row.delay, theme::MUTED);
-      ui::set_color(row.planned, theme::MUTED);
-      ui::set_color(row.summary, theme::INK);
-      ui::set_color(row.overflow, theme::MUTED);
+      if (row.line) ui::set_color(row.line, theme::SLATE);
+      if (row.destination) ui::set_color(row.destination, theme::INK);
+      if (row.track) ui::set_color(row.track, theme::INK);
+      if (row.time) ui::set_color(row.time, theme::INK);
+      if (row.delay) ui::set_color(row.delay, theme::MUTED);
+      if (row.planned) ui::set_color(row.planned, theme::MUTED);
+      if (row.summary) ui::set_color(row.summary, theme::INK);
+      if (row.overflow) ui::set_color(row.overflow, theme::MUTED);
       if (i < departures_.size() && row.badge) set_badge(row.badge, departures_[i].type);
     }
   }
@@ -304,13 +303,13 @@ class NextDepartureTile : public tessera::Tile {
   }
 
   void clear_cells(DepartureRow &row) {
-    ui::set_text(row.line, "");
-    ui::set_text(row.destination, "");
-    ui::set_text(row.track, "");
-    ui::set_text(row.time, "");
-    ui::set_text(row.delay, "");
-    ui::set_text(row.planned, "");
-    ui::set_text(row.summary, "");
+    if (row.line) ui::set_text(row.line, "");
+    if (row.destination) ui::set_text(row.destination, "");
+    if (row.track) ui::set_text(row.track, "");
+    if (row.time) ui::set_text(row.time, "");
+    if (row.delay) ui::set_text(row.delay, "");
+    if (row.planned) ui::set_text(row.planned, "");
+    if (row.summary) ui::set_text(row.summary, "");
     if (row.badge) ui::set_fill(row.badge, tessera::Tone::NORMAL, theme::CARD);
   }
 
