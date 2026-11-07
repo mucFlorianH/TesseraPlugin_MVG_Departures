@@ -459,7 +459,9 @@ class NextDepartureTile : public tessera::Tile {
       ui::set_text(row.track, d.track);
     }
 
+    ui::set_color(row.time, theme::INK);
     if (cancelled(d)) {
+      lv_obj_set_width(row.time, time_w_);
       ui::set_text(row.time, "Entfällt");
       ui::set_text(row.delay, "");
       lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
@@ -468,13 +470,18 @@ class NextDepartureTile : public tessera::Tile {
     }
 
     const int delay = delay_minutes(d);
+    const bool show_delay = delay != 0 && delay_w_ >= ui::px(38);
+    lv_obj_set_width(row.time, show_delay
+        ? std::max(ui::px(40), delay_x_ - time_x_ - ui::px(2))
+        : time_w_);
     ui::set_text(row.time, d.expected);
-    if (delay != 0 && delay_w_ >= ui::px(38)) {
+    if (show_delay) {
       ui::set_text(row.delay, std::string("(") + (delay > 0 ? "+" : "") +
                                std::to_string(delay) + ")");
       lv_obj_clear_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
       ui::set_tone(row.delay, delay > 0 ? tessera::Tone::ALERT : tessera::Tone::GOOD, theme::MUTED);
     } else {
+      ui::set_color(row.delay, theme::MUTED);
       ui::set_text(row.delay, "");
       lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
     }
