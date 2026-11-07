@@ -29,6 +29,7 @@ tiles:
       - departure_planned
       - departure_delay
       - departure_cancelled
+      - station_name
     has_attributes: [departures]
     fields:
       transport_type_1: { path: "departures[0].transport_type" }
