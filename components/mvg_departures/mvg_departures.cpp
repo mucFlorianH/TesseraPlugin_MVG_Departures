@@ -229,6 +229,7 @@ class NextDepartureTile : public tessera::Tile {
 
     // For a direct Another MVG sensor, Tessera maps the first two object rows to scalar fields.
     if (departures_.empty()) {
+      const JsonArrayConst direct_cancelled = attributes["departure_cancelled"].as<JsonArrayConst>();
       for (int i = 1; i <= 2; ++i) {
         char suffix[4];
         snprintf(suffix, sizeof(suffix), "_%d", i);
@@ -237,7 +238,7 @@ class NextDepartureTile : public tessera::Tile {
         d.line = read(attributes, "line", suffix);
         d.destination = read(attributes, "destination", suffix);
         d.expected = read(attributes, "departure_time", suffix);
-        d.cancelled = read(attributes, "cancelled", suffix);
+        d.cancelled = array_text(direct_cancelled, i - 1);
         if (cancelled(d)) {
           departures_.push_back(d);
           continue;
