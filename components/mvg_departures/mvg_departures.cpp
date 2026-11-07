@@ -1,6 +1,8 @@
 #include "mvg_departures.h"
+#include <algorithm>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 namespace esphome::mvg_departures {
 using tessera::Font;
@@ -12,61 +14,91 @@ class NextDepartureTile : public tessera::Tile {
 
   void create(const tessera::TileContext &c) override {
     title_ = ui::label(c.parent, Font::TITLE, theme::INK);
-    detail_ = ui::label(c.parent, Font::BODY, theme::MUTED);
     lv_obj_set_width(title_, c.width);
     lv_obj_set_pos(title_, 0, 0);
 
-    const int title_height = ui::line_height(Font::TITLE);
     const int line_height = ui::line_height(Font::BODY);
-    const int first_y = title_height + ui::px(6);
-    lv_obj_set_size(detail_, c.width, line_height);
-    lv_obj_set_pos(detail_, 0, first_y);
-    lv_label_set_long_mode(detail_, LV_LABEL_LONG_CLIP);
-
-    const int second_y = first_y + line_height + ui::px(4);
-    if (second_y + line_height <= c.height) {
-      later_ = ui::label(c.parent, Font::BODY, theme::MUTED);
-      lv_obj_set_size(later_, c.width, line_height);
-      lv_obj_set_pos(later_, 0, second_y);
-      lv_label_set_long_mode(later_, LV_LABEL_LONG_CLIP);
+    const int first_y = ui::line_height(Font::TITLE) + ui::px(6);
+    max_rows_ = std::max(1, (c.height - first_y) / line_height);
+    rows_.reserve(max_rows_);
+    for (int i = 0; i < max_rows_; ++i) {
+      lv_obj_t *row = ui::label(c.parent, Font::BODY, theme::MUTED);
+      lv_obj_set_size(row, c.width, line_height);
+      lv_obj_set_pos(row, 0, first_y + i * line_height);
+      lv_label_set_long_mode(row, LV_LABEL_LONG_CLIP);
+      rows_.push_back(row);
     }
   }
 
   void on_state(JsonObjectConst data) override {
     name_ = data["name"] | "";
     state_ = data["state"] | "";
-    const JsonObjectConst attributes = data["attributes"].as<JsonObjectConst>();
-    read_departure(attributes, "_1", type_1_, line_1_, destination_1_, time_1_);
-    read_departure(attributes, "_2", type_2_, line_2_, destination_2_, time_2_);
     wait_ = data["wait"] | "";
+    departures_.clear();
+
+    const JsonObjectConst attributes = data["attributes"].as<JsonObjectConst>();
+    const JsonArrayConst rows = attributes["departures"].as<JsonArrayConst>();
+    for (JsonVariantConst row : rows) {
+      if (row.is<const char *>()) {
+        const char *text = row.as<const char *>();
+        if (text && *text) departures_.emplace_back(text);
+      } else if (row.is<JsonObjectConst>()) {
+        const JsonObjectConst item = row.as<JsonObjectConst>();
+        std::string text = format_departure(item["transport_type"] | "", item["label"] | "",
+                                            item["destination"] | "", item["expected_departure"] | "");
+        if (!text.empty()) departures_.push_back(std::move(text));
+      }
+    }
+
+    // Tessera currently drops object entries from an entity's list attribute. Keep compatibility with
+    // direct Another MVG sensors by using the two scalar records extracted in the manifest.
+    if (departures_.empty()) {
+      for (int i = 1; i <= 2; ++i) {
+        char suffix[4];
+        snprintf(suffix, sizeof(suffix), "_%d", i);
+        std::string text = format_departure(read(attributes, "transport_type", suffix),
+                                            read(attributes, "line", suffix),
+                                            read(attributes, "destination", suffix),
+                                            read(attributes, "departure_time", suffix));
+        if (!text.empty()) departures_.push_back(std::move(text));
+      }
+    }
   }
 
   void on_tick(uint32_t) override {
     ui::set_text(title_, name_.empty() ? "Abfahrten" : name_);
-    std::string first = format_departure(type_1_, line_1_, destination_1_, time_1_);
-    if (first.empty()) first = !state_.empty() ? state_ : !wait_.empty() ? "Tessera: " + wait_ : "Keine nächste Abfahrt empfangen";
-    ui::set_text(detail_, first);
-    if (later_) ui::set_text(later_, format_departure(type_2_, line_2_, destination_2_, time_2_));
+    if (departures_.empty()) {
+      const std::string fallback = !state_.empty() ? state_ :
+                                   !wait_.empty() ? "Tessera: " + wait_ : "Keine nächste Abfahrt empfangen";
+      ui::set_text(rows_[0], fallback);
+      for (size_t i = 1; i < rows_.size(); ++i) ui::set_text(rows_[i], "");
+      return;
+    }
+
+    const size_t visible = std::min(departures_.size(), rows_.size());
+    const bool overflow = departures_.size() > rows_.size();
+    const size_t shown = overflow && rows_.size() > 1 ? rows_.size() - 1 : visible;
+    for (size_t i = 0; i < shown; ++i) ui::set_text(rows_[i], departures_[i]);
+    if (overflow) {
+      const size_t hidden = departures_.size() - shown;
+      ui::set_text(rows_[shown], "+ " + std::to_string(hidden) + " weitere");
+    } else if (visible < rows_.size()) {
+      ui::set_text(rows_[visible], "+ " + std::to_string(departures_.size()) + " Abfahrten");
+    }
+    const size_t clear_from = overflow ? shown + 1 : visible + 1;
+    for (size_t i = clear_from; i < rows_.size(); ++i) ui::set_text(rows_[i], "");
   }
 
   void on_theme() override {
     ui::set_color(title_, theme::INK);
-    ui::set_color(detail_, theme::MUTED);
-    if (later_) ui::set_color(later_, theme::MUTED);
+    for (lv_obj_t *row : rows_) ui::set_color(row, theme::MUTED);
   }
 
  private:
-  static void read_departure(JsonObjectConst attributes, const char *suffix, std::string &type, std::string &line,
-                             std::string &destination, std::string &time) {
-    char key[32];
-    snprintf(key, sizeof(key), "transport_type%s", suffix);
-    type = attributes[key] | "";
-    snprintf(key, sizeof(key), "line%s", suffix);
-    line = attributes[key] | "";
-    snprintf(key, sizeof(key), "destination%s", suffix);
-    destination = attributes[key] | "";
-    snprintf(key, sizeof(key), "departure_time%s", suffix);
-    time = attributes[key] | "";
+  static std::string read(JsonObjectConst attributes, const char *field, const char *suffix) {
+    char key[40];
+    snprintf(key, sizeof(key), "%s%s", field, suffix);
+    return attributes[key] | "";
   }
 
   static std::string format_departure(const std::string &type, const std::string &line,
@@ -88,10 +120,11 @@ class NextDepartureTile : public tessera::Tile {
     return text;
   }
 
-  lv_obj_t *title_{}, *detail_{}, *later_{};
+  lv_obj_t *title_{};
+  std::vector<lv_obj_t *> rows_;
+  std::vector<std::string> departures_;
   std::string name_, state_, wait_;
-  std::string type_1_, line_1_, destination_1_, time_1_;
-  std::string type_2_, line_2_, destination_2_, time_2_;
+  int max_rows_ = 1;
 };
 
 void MvgDepartures::setup() {
