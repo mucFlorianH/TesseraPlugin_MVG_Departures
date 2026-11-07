@@ -10,7 +10,7 @@ Ein Tessera-Plugin, das Abfahrten aus **Another MVG** als Kachel anzeigt.
 4. In Tessera das Plugin hinzufügen, die Kachel platzieren und den Template-Sensor auswählen.
 5. Den gewünschten Haltestellen-Namen im Feld **Name auf dem Bildschirm** eintragen.
 
-Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor stellt die Abfahrtsdaten deshalb als getrennte Listen einfacher Werte bereit. Der Haltestellen-Name steht groß über der Tabelle. Die Spaltenüberschrift ist farblich hinterlegt; Linien-Badges übernehmen die Farben der Verkehrslinie. Verspätungen werden hervorgehoben und die geplante Zeit darunter angezeigt. Kleinere Kacheln behalten dieselbe Grunddarstellung, zeigen aber weniger Zeilen und lassen bei schmalen Kacheln die Gleisspalte weg. Unbenutzte Zeilen und Trennlinien werden ausgeblendet. Wenn mehr Abfahrten vorliegen als in die Kachel passen, wird die Zahl der übrigen angezeigt. Den gewünschten Haltestellen-Namen im Feld **Name auf dem Bildschirm** für jede Kachel eintragen; ohne Eintrag erscheint der kurze Titel „Abfahrten“. Ein Another-MVG-Sensor ohne Template-Helfer liefert weiterhin höchstens zwei Abfahrten.
+Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor stellt die Abfahrtsdaten deshalb als getrennte Listen einfacher Werte bereit. Der Haltestellen-Name steht groß über der Tabelle. Die Spaltenüberschrift ist farblich hinterlegt; Linien-Badges übernehmen die Farben der Verkehrslinie. Verspätungen werden hervorgehoben und die geplante Zeit darunter angezeigt. Kleinere Kacheln behalten dieselbe Grunddarstellung, zeigen aber weniger Zeilen und lassen bei schmalen Kacheln die Gleisspalte weg. Unbenutzte Zeilen und Trennlinien werden ausgeblendet. Wenn mehr Abfahrten vorliegen als in die Kachel passen, wird die Zahl der übrigen angezeigt. Der Haltestellen-Name wird, wenn vorhanden, aus dem optionalen Attribut `station_name` übernommen. Ohne dieses Attribut den Namen im Feld **Name auf dem Bildschirm** jeder Kachel eintragen; als letzte Rückfallebene erscheint „Abfahrten“. Ein Another-MVG-Sensor ohne Template-Helfer liefert weiterhin höchstens zwei Abfahrten.
 
 ## Template-Sensor
 
@@ -24,6 +24,8 @@ template:
         state: >
           {{ (state_attr('sensor.another_mvg_departures', 'departures') or []) | count }}
         attributes:
+          station_name: >
+            {{ ((state_attr('sensor.another_mvg_departures', 'config') or {}).get('name', '')) }}
           departures: >
             {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
                | map(attribute='label', default='') | list }}
@@ -53,4 +55,4 @@ template:
                | map(attribute='cancelled', default=false) | map('string') | list }}
 ```
 
-Nach dem Neuladen der Template-Entitäten den Helfer in Tessera auswählen und den Bildschirm mit Plugin-Version 0.1.8 neu bauen. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
+Nach dem Neuladen der Template-Entitäten den Helfer in Tessera auswählen und den Bildschirm mit Plugin-Version 0.1.8 neu bauen. Für einheitliche Überschriften nach der Ergänzung von `station_name` den Template-Sensor in Home Assistant neu laden. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
