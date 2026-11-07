@@ -2,6 +2,7 @@
 #include <string>
 
 namespace esphome::mvg_departures {
+using tessera::Font;
 namespace ui = tessera::ui;
 
 class ProbeTile : public tessera::Tile {
