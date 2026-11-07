@@ -137,7 +137,6 @@ class NextDepartureTile : public tessera::Tile {
     }
   }
   void on_state(JsonObjectConst data) override {
-    entity_name_ = data["name"] | "";
     state_ = data["state"] | "";
     wait_ = data["wait"] | "";
     departures_.clear();
@@ -428,7 +427,7 @@ class NextDepartureTile : public tessera::Tile {
       if (row.planned) { ui::set_text(row.planned, ""); lv_obj_add_flag(row.planned, LV_OBJ_FLAG_HIDDEN); }
     }
   }
-  std::string custom_name_, entity_name_, state_, wait_;
+  std::string custom_name_, state_, wait_;
   std::vector<Departure> departures_;
   std::vector<DepartureRow> rows_;
   lv_obj_t *title_{};
