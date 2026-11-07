@@ -97,7 +97,7 @@ class NextDepartureTile : public tessera::Tile {
     destination_x_ = destination_x;
     destination_w_ = destination_w;
     track_x_ = track_x;
-    track_w_ = std::max(0, track_col - gap);
+    track_w_ = track_col;
     time_x_ = time_x;
     time_w_ = time_col;
     delay_x_ = time_x;
