@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.23 - 2026-11-07
+- Put the track before departure time and delay before expected time; right-align cancelled labels.
+- Keep the station title and transport markers in one-column tiles while hiding table headings.
+- Give one-row tiles a small title above the bottom-aligned departure and improve two-column space for destinations.
+
+
 ## 0.1.22 - 2026-11-07
 - Place delay directly after the expected departure time and move the track column to its right.
 - Hide station and table headings in one-column layouts; give the route badge more room.
