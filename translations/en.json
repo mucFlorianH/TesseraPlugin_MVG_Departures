@@ -5,8 +5,8 @@
   "screen": {},
   "app": {
     "name": "Another MVG departures",
-    "summary": "Shows the next departure from a selected Another MVG sensor as a Tessera tile.",
-    "departure_tile": "Next departure",
+    "summary": "Shows upcoming departures from a selected Another MVG sensor as a Tessera tile.",
+    "departure_tile": "Departures",
     "probe_example": "Select an Another MVG sensor with a departures attribute."
   }
 }
