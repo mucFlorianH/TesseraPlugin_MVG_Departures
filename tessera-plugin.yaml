@@ -1,6 +1,6 @@
 # Reads departures from a selected Another MVG sensor or a structured Home Assistant template sensor.
 id: mvg_departures
-version: 0.1.22
+version: 0.1.23
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
