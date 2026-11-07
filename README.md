@@ -18,38 +18,32 @@ Ersetze `sensor.another_mvg_departures` durch deine Another-MVG-Entität. Falls 
 
 ```yaml
 template:
-  - sensor:
+  - triggers:
+      - trigger: state
+        entity_id: sensor.another_mvg_departures
+    variables:
+      departures: >
+        {{ trigger.to_state.attributes.get('departures', []) if trigger.to_state else [] }}
+      mvg_config: >
+        {{ trigger.to_state.attributes.get('config', {}) if trigger.to_state else {} }}
+    sensor:
       - name: "MVG Abfahrten für Tessera"
         unique_id: mvg_departures_for_tessera
-        state: >
-          {{ (state_attr('sensor.another_mvg_departures', 'departures') or []) | count }}
-        attributes:
-          station_name: >
-            {{ ((state_attr('sensor.another_mvg_departures', 'config') or {}).get('name', '')) }}
-          departures: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='label', default='') | list }}
-          departure_type: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='transport_type', default='') | list }}
-          departure_line: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='label', default='') | list }}
-          departure_destination: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='destination', default='') | list }}
-          departure_track: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='track', default='') | list }}
-          departure_expected: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='expected_departure', default='') | list }}
-          departure_delay: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='delay', default=0) | list }}
-          departure_cancelled: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='cancelled', default=false) | map('string') | list }}
+        state: "{{ departures | count }}"
+        attributes: >
+          {{
+            {
+              "station_name": mvg_config.get('name', ''),
+              "departures": departures | map(attribute='label', default='') | list,
+              "departure_type": departures | map(attribute='transport_type', default='') | list,
+              "departure_line": departures | map(attribute='label', default='') | list,
+              "departure_destination": departures | map(attribute='destination', default='') | list,
+              "departure_track": departures | map(attribute='track', default='') | list,
+              "departure_expected": departures | map(attribute='expected_departure', default='') | list,
+              "departure_delay": departures | map(attribute='delay', default=0) | list,
+              "departure_cancelled": departures | map(attribute='cancelled', default=false) | map('string') | list
+            }
+          }}
 ```
 
 Nach dem Neuladen der Template-Entitäten den Helfer in Tessera auswählen und den Bildschirm mit Plugin-Version 0.1.26 neu bauen. Für einheitliche Überschriften nach der Ergänzung von `station_name` den Template-Sensor in Home Assistant neu laden. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
