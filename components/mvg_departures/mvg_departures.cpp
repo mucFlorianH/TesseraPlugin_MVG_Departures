@@ -137,6 +137,7 @@ class NextDepartureTile : public tessera::Tile {
     }
   }
   void on_state(JsonObjectConst data) override {
+    entity_name_ = data["name"] | "";
     state_ = data["state"] | "";
     wait_ = data["wait"] | "";
     departures_.clear();
@@ -210,8 +211,9 @@ class NextDepartureTile : public tessera::Tile {
   }
 
   void on_tick(uint32_t) override {
+    const bool custom_title = !custom_name_.empty() && custom_name_ != entity_name_;
     ui::set_text(title_, !station_name_.empty() ? station_name_ :
-                           !custom_name_.empty() ? custom_name_ : "Abfahrten");
+                           custom_title ? custom_name_ : "Abfahrten");
     const size_t capacity = rows_.size();
     if (departures_.empty()) {
       clear_cells(rows_[0]);
@@ -429,7 +431,7 @@ class NextDepartureTile : public tessera::Tile {
       if (row.planned) { ui::set_text(row.planned, ""); lv_obj_add_flag(row.planned, LV_OBJ_FLAG_HIDDEN); }
     }
   }
-  std::string custom_name_, station_name_, state_, wait_;
+  std::string custom_name_, entity_name_, station_name_, state_, wait_;
   std::vector<Departure> departures_;
   std::vector<DepartureRow> rows_;
   lv_obj_t *title_{};
