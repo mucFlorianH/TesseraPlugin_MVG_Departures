@@ -1,9 +1,13 @@
 # Changelog
 
+## 0.1.25 - 2026-11-07
+- Keep the Tessera manifest within its eight-field limit; read cancellation status through the supported attribute list.
+
+
 ## 0.1.24 - 2026-11-07
 - Use a small title without transport markers in one-column and one-row tiles.
 - Right-align transport markers beside the title in wider multi-row tiles.
-- Tighten the track and departure columns; show canceled scalar departures even without an expected time.
+- Tighten the track and departure columns; retain canceled departures without an expected time when cancellation attributes are available.
 
 
 ## 0.1.23 - 2026-11-07
