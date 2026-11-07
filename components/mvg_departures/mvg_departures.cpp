@@ -47,7 +47,7 @@ class NextDepartureTile : public tessera::Tile {
     narrow_ = c.columns <= 1 || c.width < ui::px(460);
     single_line_ = c.rows <= 1 || c.height < ui::px(90);
     compact_ = narrow_ || c.height < ui::px(210);
-    headerless_ = narrow_ || single_line_;
+    headerless_ = c.columns <= 1 || single_line_;
     title_font_ = compact_ ? Font::HEADLINE : Font::VALUE;
     const int title_h = ui::line_height(title_font_);
 
@@ -86,6 +86,7 @@ class NextDepartureTile : public tessera::Tile {
       if (!narrow_)
         header_track_ = make_label(c.parent, "Gleis", track_x, header_text_y, track_col - gap, header_h,
                                    Font::BODY_LARGE, theme::INK);
+      rows_y_ = header_y + header_h + gap;
     } else {
       rows_y_ = 0;
     }
@@ -125,7 +126,7 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_style_text_align(row.line, LV_TEXT_ALIGN_CENTER, 0);
       row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_,
                                    row_body_h, Font::BODY, theme::INK);
-      if (!narrow_ && !single_line_)
+      if (!narrow_)
         row.track = make_label(c.parent, "", track_x_, body_y, track_w_, row_body_h,
                                Font::BODY, theme::INK);
 
@@ -458,7 +459,7 @@ class NextDepartureTile : public tessera::Tile {
     } else if (row.destination) {
       lv_obj_add_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
     }
-    if (row.track && !single_line_) {
+    if (row.track) {
       lv_obj_clear_flag(row.track, LV_OBJ_FLAG_HIDDEN);
       ui::set_text(row.track, d.track);
     }
