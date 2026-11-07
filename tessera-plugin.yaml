@@ -1,6 +1,6 @@
 # Reads the departures attribute from a user-selected Another MVG sensor.
 id: mvg_departures
-version: 0.1.1
+version: 0.1.2
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
