@@ -14,7 +14,7 @@ Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor 
 
 ## Template-Sensor
 
-Ersetze `sensor.another_mvg_departures` durch deine Another-MVG-Entität. Falls bereits ein `template:`-Abschnitt existiert, ergänze den Sensor dort, statt einen zweiten Abschnitt anzulegen.
+Trage deine Another-MVG-Entität nur beim `entity_id` des Auslösers ein. Falls bereits ein `template:`-Abschnitt existiert, ergänze den Sensor dort, statt einen zweiten Abschnitt anzulegen.
 
 ```yaml
 template:
