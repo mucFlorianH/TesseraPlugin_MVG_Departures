@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "name": "English"
+  },
+  "screen": {},
+  "app": {
+    "name": "Another MVG departures",
+    "summary": "Shows departures from a selected Another MVG sensor as a Tessera tile.",
+    "departure_tile": "Departures",
+    "probe_example": "Select an Another MVG sensor with a departures attribute."
+  }
+}
