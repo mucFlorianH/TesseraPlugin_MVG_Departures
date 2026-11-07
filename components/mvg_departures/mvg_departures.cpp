@@ -19,9 +19,9 @@ class NextDepartureTile : public tessera::Tile {
 
     const int line_height = ui::line_height(Font::BODY);
     const int first_y = ui::line_height(Font::TITLE) + ui::px(6);
-    max_rows_ = std::max(1, (c.height - first_y) / line_height);
-    rows_.reserve(max_rows_);
-    for (int i = 0; i < max_rows_; ++i) {
+    const int max_rows = std::max(1, (c.height - first_y) / line_height);
+    rows_.reserve(max_rows);
+    for (int i = 0; i < max_rows; ++i) {
       lv_obj_t *row = ui::label(c.parent, Font::BODY, theme::MUTED);
       lv_obj_set_size(row, c.width, line_height);
       lv_obj_set_pos(row, 0, first_y + i * line_height);
@@ -46,7 +46,7 @@ class NextDepartureTile : public tessera::Tile {
         const JsonObjectConst item = row.as<JsonObjectConst>();
         std::string text = format_departure(item["transport_type"] | "", item["label"] | "",
                                             item["destination"] | "", item["expected_departure"] | "");
-        if (!text.empty()) departures_.push_back(std::move(text));
+        if (!text.empty()) departures_.push_back(text);
       }
     }
 
@@ -60,7 +60,7 @@ class NextDepartureTile : public tessera::Tile {
                                             read(attributes, "line", suffix),
                                             read(attributes, "destination", suffix),
                                             read(attributes, "departure_time", suffix));
-        if (!text.empty()) departures_.push_back(std::move(text));
+        if (!text.empty()) departures_.push_back(text);
       }
     }
   }
@@ -75,17 +75,15 @@ class NextDepartureTile : public tessera::Tile {
       return;
     }
 
-    const size_t visible = std::min(departures_.size(), rows_.size());
     const bool overflow = departures_.size() > rows_.size();
-    const size_t shown = overflow && rows_.size() > 1 ? rows_.size() - 1 : visible;
+    const bool show_overflow = overflow && rows_.size() > 1;
+    const size_t shown = show_overflow ? rows_.size() - 1 : std::min(departures_.size(), rows_.size());
     for (size_t i = 0; i < shown; ++i) ui::set_text(rows_[i], departures_[i]);
-    if (overflow) {
+    if (show_overflow) {
       const size_t hidden = departures_.size() - shown;
       ui::set_text(rows_[shown], "+ " + std::to_string(hidden) + " weitere");
-    } else if (visible < rows_.size()) {
-      ui::set_text(rows_[visible], "+ " + std::to_string(departures_.size()) + " Abfahrten");
     }
-    const size_t clear_from = overflow ? shown + 1 : visible + 1;
+    const size_t clear_from = show_overflow ? shown + 1 : shown;
     for (size_t i = clear_from; i < rows_.size(); ++i) ui::set_text(rows_[i], "");
   }
 
@@ -124,7 +122,6 @@ class NextDepartureTile : public tessera::Tile {
   std::vector<lv_obj_t *> rows_;
   std::vector<std::string> departures_;
   std::string name_, state_, wait_;
-  int max_rows_ = 1;
 };
 
 void MvgDepartures::setup() {
