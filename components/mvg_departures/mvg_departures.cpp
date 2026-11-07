@@ -133,7 +133,7 @@ class NextDepartureTile : public tessera::Tile {
     // Small transport markers beside the title. Empty selection means automatic detection.
     for (int i = 0; i < 4; ++i) {
       mode_icons_[i] = ui::label(c.parent, Font::BODY, theme::ACCENT);
-      lv_obj_set_size(mode_icons_[i], ui::px(24), ui::line_height(Font::BODY));
+      lv_obj_set_size(mode_icons_[i], i == 0 ? ui::px(34) : ui::px(24), ui::line_height(Font::BODY));
       lv_obj_set_style_text_align(mode_icons_[i], LV_TEXT_ALIGN_CENTER, 0);
       lv_obj_add_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
     }
@@ -304,7 +304,7 @@ class NextDepartureTile : public tessera::Tile {
         if (!mode.empty() && std::find(modes.begin(), modes.end(), mode) == modes.end()) modes.push_back(mode);
       }
     }
-    const char *labels[] = {"B", "U", "S", "T"};
+    const char *labels[] = {"BUS", "U", "S", "T"};
     const char *keys[] = {"bus", "u_bahn", "s_bahn", "tram"};
     int shown = 0;
     for (int i = 0; i < 4; ++i) {
@@ -312,7 +312,7 @@ class NextDepartureTile : public tessera::Tile {
       if (!mode_icons_[i]) continue;
       if (visible) {
         lv_obj_clear_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
-        lv_obj_set_pos(mode_icons_[i], shown * ui::px(27), 0);
+        lv_obj_set_pos(mode_icons_[i], shown == 0 ? 0 : ui::px(34) + (shown - 1) * ui::px(27), 0);
         lv_obj_set_style_radius(mode_icons_[i], ui::px(12), 0);
         lv_obj_set_style_bg_opa(mode_icons_[i], LV_OPA_COVER, 0);
         lv_obj_set_style_bg_color(mode_icons_[i], lv_color_hex(0x1677C8), 0);
@@ -323,7 +323,7 @@ class NextDepartureTile : public tessera::Tile {
         lv_obj_add_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
       }
     }
-    const int offset = shown ? shown * ui::px(27) + ui::px(6) : 0;
+    const int offset = shown ? ui::px(34) + (shown - 1) * ui::px(27) + ui::px(6) : 0;
     lv_obj_set_pos(title_, offset, 0);
     lv_obj_set_width(title_, std::max(1, tile_width_ - offset));
   }
@@ -429,61 +429,40 @@ class NextDepartureTile : public tessera::Tile {
     lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(row.badge, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(row.line, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(row.time, LV_OBJ_FLAG_HIDDEN);
-    if (row.track) lv_obj_clear_flag(row.track, LV_OBJ_FLAG_HIDDEN);
     set_badge(row, d);
     ui::set_text(row.line, d.line.empty() ? d.type : d.line);
-    ui::set_text(row.destination, d.destination);
-    if (row.track) ui::set_text(row.track, d.track);
+    // The line badge and the expected time stay visible in a one-row tile.
+    const bool show_destination = !single_line_ || destination_w_ >= ui::px(42);
+    if (show_destination && row.destination) {
+      lv_obj_clear_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
+      ui::set_text(row.destination, d.destination);
+    } else if (row.destination) {
+      lv_obj_add_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
+    }
+    if (row.track && !single_line_) {
+      lv_obj_clear_flag(row.track, LV_OBJ_FLAG_HIDDEN);
+      ui::set_text(row.track, d.track);
+    }
 
     if (cancelled(d)) {
       ui::set_text(row.time, "Entfällt");
       ui::set_text(row.delay, "");
       lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
-      if (row.planned) { ui::set_text(row.planned, ""); lv_obj_add_flag(row.planned, LV_OBJ_FLAG_HIDDEN); }
       ui::set_tone(row.time, tessera::Tone::ALERT, theme::INK);
       return;
     }
 
     const int delay = delay_minutes(d);
-    if (compact_) {
-      ui::set_text(row.time, d.expected);
-      if (delay == 0) {
-        ui::set_text(row.delay, "");
-        lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
-      } else {
-        ui::set_text(row.delay, std::string(delay > 0 ? "+" : "") + std::to_string(delay));
-        lv_obj_clear_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
-        ui::set_tone(row.delay, tessera::Tone::ALERT, theme::MUTED);
-      }
-      return;
-    }
-
-    const int title_h = ui::line_height(Font::TITLE);
-    const int body_h = ui::line_height(Font::BODY);
-    const int first_y = row.y + std::max(0, (row_h_ - title_h - body_h) / 2);
-    if (delay != 0) {
-      lv_obj_set_pos(row.time, time_x_, first_y);
-      lv_obj_set_pos(row.delay, delay_x_, first_y + std::max(0, (title_h - body_h) / 2));
-      if (row.planned) lv_obj_set_pos(row.planned, time_x_, first_y + title_h);
-      ui::set_tone(row.delay, tessera::Tone::ALERT, theme::MUTED);
-      ui::set_text(row.time, d.expected);
-      ui::set_text(row.delay, std::string(delay > 0 ? "+" : "") + std::to_string(delay));
+    ui::set_text(row.time, d.expected);
+    if (delay != 0 && delay_w_ >= ui::px(22)) {
+      ui::set_text(row.delay, std::string("(") + (delay > 0 ? "+" : "") +
+                               std::to_string(delay) + ")");
       lv_obj_clear_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
-      if (row.planned) {
-        ui::set_text(row.planned, d.planned.empty() ? "" : "(" + d.planned + ")");
-        if (d.planned.empty()) lv_obj_add_flag(row.planned, LV_OBJ_FLAG_HIDDEN);
-        else lv_obj_clear_flag(row.planned, LV_OBJ_FLAG_HIDDEN);
-      }
+      ui::set_tone(row.delay, delay > 0 ? tessera::Tone::ALERT : tessera::Tone::GOOD, theme::MUTED);
     } else {
-      const int time_y = row.y + (row_h_ - title_h) / 2;
-      lv_obj_set_pos(row.time, time_x_, time_y);
-      ui::set_text(row.time, d.expected);
-      ui::set_color(row.delay, theme::MUTED);
       ui::set_text(row.delay, "");
       lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN);
-      if (row.planned) { ui::set_text(row.planned, ""); lv_obj_add_flag(row.planned, LV_OBJ_FLAG_HIDDEN); }
     }
   }
   std::string custom_name_, entity_name_, station_name_, state_, wait_;\n  std::vector<std::string> manual_modes_;\n  lv_obj_t *mode_icons_[4]{};\n  int tile_width_{};
