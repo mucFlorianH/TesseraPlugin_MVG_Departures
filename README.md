@@ -1,6 +1,6 @@
 # Another MVG departures for Tessera
 
-Ein Tessera-Plugin, das die nächste Abfahrt eines ausgewählten Sensors der Home-Assistant-Integration **Another MVG** als Kachel anzeigt.
+Ein Tessera-Plugin, das Abfahrten eines ausgewählten Sensors der Home-Assistant-Integration **Another MVG** als Kachel anzeigt.
 
 ## Einrichtung
 
@@ -11,4 +11,4 @@ Ein Tessera-Plugin, das die nächste Abfahrt eines ausgewählten Sensors der Hom
 
 ## Anzeige
 
-Die Kachel zeigt Verkehrsmittel, Linie, Ziel und planmäßige Abfahrtszeit des ersten Eintrags in `departures`. Tessera überträgt Listen aus Objekten nicht direkt; das Plugin wählt diese Felder deshalb vor der Übergabe einzeln aus. Die Kachel zeigt derzeit nur die nächste Abfahrt.
+Die Kachel zeigt die nächsten Abfahrten mit Verkehrsmittel, Linie, Ziel und planmäßiger Abfahrtszeit. Tessera überträgt Listen aus Objekten nicht direkt; das Plugin extrahiert die benötigten Felder. Je nach verfügbarer Kachelfläche wird die zweite Abfahrt ebenfalls angezeigt.
