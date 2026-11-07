@@ -22,16 +22,17 @@ template:
         unique_id: mvg_departures_for_tessera
         state: >
           {{ (state_attr('sensor.another_mvg_departures', 'departures') or []) | count }}
-        attributes: >
-          {% set source = state_attr('sensor.another_mvg_departures', 'departures') or [] %}
-          {% set ns = namespace(rows=[]) %}
-          {% for d in source %}
-            {% set route = ((d.get('transport_type', '') or '') ~ ' ' ~ (d.get('label', '') or '')) | trim %}
-            {% set destination = d.get('destination', '') or '' %}
-            {% set departure_time = d.get('expected_departure', '') or '' %}
-            {% set ns.rows = ns.rows + [route ~ ' - ' ~ destination ~ ' | ' ~ departure_time] %}
-          {% endfor %}
-          {{ {"departures": ns.rows} }}
+        attributes:
+          departures: >
+            {% set source = state_attr('sensor.another_mvg_departures', 'departures') or [] %}
+            {% set ns = namespace(rows=[]) %}
+            {% for d in source %}
+              {% set route = ((d.get('transport_type', '') or '') ~ ' ' ~ (d.get('label', '') or '')) | trim %}
+              {% set destination = d.get('destination', '') or '' %}
+              {% set departure_time = d.get('expected_departure', '') or '' %}
+              {% set ns.rows = ns.rows + [route ~ ' - ' ~ destination ~ ' | ' ~ departure_time] %}
+            {% endfor %}
+            {{ ns.rows }}
 ```
 
 Nach dem Neuladen der Template-Entitäten den neuen Sensor in Tessera auswählen. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
