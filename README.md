@@ -10,7 +10,7 @@ Ein Tessera-Plugin, das Abfahrten aus **Another MVG** als Kachel anzeigt.
 4. In Tessera das Plugin hinzufügen, die Kachel platzieren und den Template-Sensor auswählen.
 5. Den gewünschten Haltestellen-Namen im Feld **Name auf dem Bildschirm** eintragen.
 
-Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor stellt die Abfahrtsdaten deshalb als getrennte Listen einfacher Werte bereit. Der Haltestellen-Name steht groß oberhalb der Tabelle; der Tabellenkopf hat einen durchgehenden, hellgrauen Hintergrund. Linien-Badges übernehmen die Farben der Verkehrslinie. Verspätungen erscheinen als farbige Änderung in Klammern hinter der erwarteten Zeit; die geplante Zeit wird nicht zusätzlich angezeigt. Die Verkehrsmittel-Symbole neben dem Titel werden standardmäßig aus den anstehenden Abfahrten erkannt. In den Kacheloptionen kannst du stattdessen mehrere Verkehrsmittel auswählen; eine leere Auswahl aktiviert wieder die automatische Erkennung. Kleine Kacheln behalten die wesentlichen Informationen. Bei nur einer Zeile entfallen Titel und Tabellenkopf; Linie und Uhrzeit bleiben sichtbar, das Ziel erscheint nur, wenn ausreichend Platz vorhanden ist. Unbenutzte Zeilen und Trennlinien werden ausgeblendet. Die Kachel zeigt so viele Abfahrten, wie in den verfügbaren Platz passen. Der Haltestellen-Name wird, wenn vorhanden, aus dem optionalen Attribut `station_name` übernommen. Ohne dieses Attribut den Namen im Feld **Name auf dem Bildschirm** jeder Kachel eintragen; als letzte Rückfallebene erscheint „Abfahrten“. Ein Another-MVG-Sensor ohne Template-Helfer liefert weiterhin höchstens zwei Abfahrten.
+Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor stellt die Abfahrtsdaten deshalb als getrennte Listen einfacher Werte bereit. Der Haltestellen-Name steht groß oberhalb der Tabelle; der Tabellenkopf hat einen durchgehenden, hellgrauen Hintergrund. Linien-Badges übernehmen die Farben der Verkehrslinie. Verspätungen erscheinen als farbige Abweichung in Klammern vor der erwarteten Zeit. Die Verkehrsmittel-Symbole neben dem Titel werden standardmäßig aus den anstehenden Abfahrten erkannt. In den Kacheloptionen kannst du stattdessen mehrere Verkehrsmittel auswählen; eine leere Auswahl aktiviert wieder die automatische Erkennung. Kleine Kacheln behalten die wesentlichen Informationen. Bei nur einer Zeile entfallen Titel und Tabellenkopf; Linie und Uhrzeit bleiben sichtbar, das Ziel erscheint nur, wenn ausreichend Platz vorhanden ist. Unbenutzte Zeilen und Trennlinien werden ausgeblendet. Die Kachel zeigt so viele Abfahrten, wie in den verfügbaren Platz passen. Der Haltestellen-Name wird, wenn vorhanden, aus dem optionalen Attribut `station_name` übernommen. Ohne dieses Attribut den Namen im Feld **Name auf dem Bildschirm** jeder Kachel eintragen; als letzte Rückfallebene erscheint „Abfahrten“. Ein Another-MVG-Sensor ohne Template-Helfer liefert weiterhin höchstens zwei Abfahrten.
 
 ## Template-Sensor
 
@@ -44,9 +44,6 @@ template:
           departure_expected: >
             {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
                | map(attribute='expected_departure', default='') | list }}
-          departure_planned: >
-            {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
-               | map(attribute='planned_departure', default='') | list }}
           departure_delay: >
             {{ (state_attr('sensor.another_mvg_departures', 'departures') or [])
                | map(attribute='delay', default=0) | list }}
@@ -55,4 +52,4 @@ template:
                | map(attribute='cancelled', default=false) | map('string') | list }}
 ```
 
-Nach dem Neuladen der Template-Entitäten den Helfer in Tessera auswählen und den Bildschirm mit Plugin-Version 0.1.20 neu bauen. Für einheitliche Überschriften nach der Ergänzung von `station_name` den Template-Sensor in Home Assistant neu laden. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
+Nach dem Neuladen der Template-Entitäten den Helfer in Tessera auswählen und den Bildschirm mit Plugin-Version 0.1.21 neu bauen. Für einheitliche Überschriften nach der Ergänzung von `station_name` den Template-Sensor in Home Assistant neu laden. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
