@@ -32,7 +32,7 @@ class NextDepartureTile : public tessera::Tile {
 
   void create(const tessera::TileContext &c) override {
     custom_name_ = c.name ? c.name : "";
-    compact_ = c.width < ui::px(380) || c.height < ui::px(210);
+    compact_ = c.width < ui::px(460) || c.height < ui::px(210);
 
     title_ = ui::label(c.parent, Font::TITLE, theme::INK);
     lv_obj_set_size(title_, c.width, ui::line_height(Font::TITLE));
@@ -100,7 +100,7 @@ class NextDepartureTile : public tessera::Tile {
         row.track = make_label(c.parent, "", track_x_, y, track_w_, body_h2 * 2,
                                Font::BODY, theme::INK);
         const int main_time_w = std::max(ui::px(52), delay_x_ - time_x_ - ui::px(2));
-        row.time = make_label(c.parent, "", time_x_, y, main_time_w, body_h2, Font::TITLE, theme::INK);
+        row.time = make_label(c.parent, "", time_x_, y, main_time_w, ui::line_height(Font::TITLE), Font::TITLE, theme::INK);
         row.delay = make_label(c.parent, "", delay_x_, y, delay_w_, body_h2, Font::BODY, theme::MUTED);
         row.planned = make_label(c.parent, "", time_x_, y + planned_y_offset_, time_w_, body_h2,
                                  Font::BODY, theme::MUTED);
