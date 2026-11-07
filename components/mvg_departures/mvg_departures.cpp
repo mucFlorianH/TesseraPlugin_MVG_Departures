@@ -36,7 +36,7 @@ class NextDepartureTile : public tessera::Tile {
     custom_name_ = c.name ? c.name : "";
     narrow_ = c.width < ui::px(460);
     compact_ = narrow_ || c.height < ui::px(210);
-    title_font_ = Font::VALUE;
+    title_font_ = compact_ ? Font::HEADLINE : Font::VALUE;
 
     title_ = ui::label(c.parent, title_font_, theme::INK);
     lv_obj_set_size(title_, c.width, ui::line_height(title_font_));
