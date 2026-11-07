@@ -1,6 +1,6 @@
-# Reads generic departure fields from a user-selected Another MVG sensor.
+# Reads departures from a selected Another MVG sensor or a flattened Home Assistant template sensor.
 id: mvg_departures
-version: 0.1.4
+version: 0.1.5
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
@@ -19,6 +19,7 @@ tiles:
     sizes: { min: 1x1, max: 9x9 }
     memory: 500
     domains: [sensor]
+    attributes: [departures]
     has_attributes: [departures]
     fields:
       transport_type_1: { path: "departures[0].transport_type" }
