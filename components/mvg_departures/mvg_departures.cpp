@@ -34,60 +34,63 @@ class NextDepartureTile : public tessera::Tile {
 
   void create(const tessera::TileContext &c) override {
     custom_name_ = c.name ? c.name : "";
-    narrow_ = c.width < ui::px(460);
+    narrow_ = c.columns <= 1 || c.width < ui::px(460);
+    single_line_ = c.rows <= 1 || c.height < ui::px(90);
     compact_ = narrow_ || c.height < ui::px(210);
     title_font_ = compact_ ? Font::HEADLINE : Font::VALUE;
 
-    title_ = ui::label(c.parent, title_font_, theme::INK);
-    lv_obj_set_size(title_, c.width, ui::line_height(title_font_));
-    lv_obj_set_pos(title_, 0, 0);
-    lv_label_set_long_mode(title_, LV_LABEL_LONG_DOT);
-
     const int gap = ui::px(6);
-    const int title_h = ui::line_height(title_font_);
-    const int header_h = ui::line_height(Font::BODY_LARGE);
-    const int header_y = title_h + gap;
-    const int line_col = c.width * (narrow_ ? 21 : 15) / 100;
-    const int track_col = narrow_ ? 0 : c.width * 13 / 100;
-    const int time_col = c.width * (narrow_ ? 30 : 24) / 100;
-    const int destination_x = line_col + gap;
-    const int track_x = c.width - time_col - track_col;
-    const int time_x = c.width - time_col;
-    const int destination_w = track_x - destination_x - (narrow_ ? 0 : gap);
-
-    header_bg_ = ui::block(c.parent, theme::ACCENT);
-    lv_obj_set_size(header_bg_, c.width, header_h + ui::px(4));
-    lv_obj_set_pos(header_bg_, 0, header_y - ui::px(2));
-
-    header_line_ = make_label(c.parent, "Linie", 0, header_y, line_col, header_h,
-                              Font::BODY_LARGE, theme::ON_ACCENT);
-    header_destination_ = make_label(c.parent, "Ziel", destination_x, header_y,
-                                     destination_w, header_h, Font::BODY_LARGE, theme::ON_ACCENT);
-    if (!narrow_) {
-      header_track_ = make_label(c.parent, "Gleis", track_x, header_y, track_col - gap, header_h,
-                                 Font::BODY_LARGE, theme::ON_ACCENT);
-    }
-    header_time_ = make_label(c.parent, "Abfahrt", time_x, header_y, time_col, header_h,
-                              Font::BODY_LARGE, theme::ON_ACCENT);
-
-    rows_y_ = header_y + header_h + gap;
     const int body_h = ui::line_height(Font::BODY);
-    const int time_h = ui::line_height(compact_ ? Font::BODY_LARGE : Font::TITLE);
-    row_h_ = compact_ ? std::max(body_h + ui::px(12), ui::px(34))
-                      : std::max(time_h + body_h + gap, ui::px(52));
+    const int line_col = c.width * (narrow_ ? 22 : 15) / 100;
+    const int track_col = narrow_ ? 0 : c.width * 13 / 100;
+    const int time_col = std::max(ui::px(64), c.width * (narrow_ ? 27 : 24) / 100);
+    const int time_x = c.width - time_col;
+    const int destination_x = line_col + gap;
+    const int track_x = time_x - track_col;
+    const int destination_w = std::max(0, (narrow_ ? time_x : track_x - gap) - destination_x);
 
+    if (!single_line_) {
+      const int title_h = ui::line_height(title_font_);
+      title_ = ui::label(c.parent, title_font_, theme::INK);
+      lv_obj_set_size(title_, c.width, title_h);
+      lv_obj_set_pos(title_, 0, 0);
+      lv_label_set_long_mode(title_, LV_LABEL_LONG_DOT);
+
+      const int header_h = ui::line_height(Font::BODY_LARGE);
+      const int header_y = title_h + gap;
+      header_bg_ = ui::block(c.parent, theme::TRACK);
+      lv_obj_set_size(header_bg_, c.width, header_h + ui::px(4));
+      lv_obj_set_pos(header_bg_, 0, header_y - ui::px(2));
+      lv_obj_set_style_radius(header_bg_, 0, 0);
+      header_line_ = make_label(c.parent, "Linie", 0, header_y, line_col, header_h,
+                                Font::BODY_LARGE, theme::INK);
+      header_destination_ = make_label(c.parent, "Ziel", destination_x, header_y,
+                                       destination_w, header_h, Font::BODY_LARGE, theme::INK);
+      if (!narrow_)
+        header_track_ = make_label(c.parent, "Gleis", track_x, header_y, track_col - gap, header_h,
+                                   Font::BODY_LARGE, theme::INK);
+      header_time_ = make_label(c.parent, "Abfahrt", time_x, header_y, time_col, header_h,
+                                Font::BODY_LARGE, theme::INK);
+      rows_y_ = header_y + header_h + gap;
+    } else {
+      rows_y_ = 0;
+    }
+
+    const int time_font_h = ui::line_height(compact_ ? Font::BODY_LARGE : Font::TITLE);
+    row_h_ = single_line_ ? c.height :
+             compact_ ? std::max(body_h + ui::px(12), ui::px(34)) :
+                        std::max(time_font_h + body_h + gap, ui::px(52));
     line_col_ = line_col;
     destination_x_ = destination_x;
-    destination_w_ = std::max(1, destination_w);
+    destination_w_ = destination_w;
     track_x_ = track_x;
     track_w_ = std::max(0, track_col - gap);
     time_x_ = time_x;
     time_w_ = time_col;
-    delay_x_ = time_x + time_col * 76 / 100;
-    delay_w_ = std::max(ui::px(24), time_x + time_col - delay_x_);
+    delay_x_ = time_x + time_col * 66 / 100;
+    delay_w_ = std::max(ui::px(20), time_x + time_col - delay_x_);
 
-    const int remaining = c.height - rows_y_;
-    const int count = std::max(1, remaining / std::max(1, row_h_));
+    int count = single_line_ ? 1 : std::max(1, (c.height - rows_y_) / std::max(1, row_h_));
     rows_.reserve(count);
     for (int i = 0; i < count; ++i) {
       DepartureRow row;
@@ -96,44 +99,49 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_size(row.separator, c.width, std::max(1, ui::px(1)));
       lv_obj_set_pos(row.separator, 0, row.y + row_h_ - std::max(1, ui::px(1)));
       lv_obj_add_flag(row.separator, LV_OBJ_FLAG_HIDDEN);
-
       const int row_body_h = ui::line_height(Font::BODY);
       const int badge_h = row_body_h + ui::px(6);
       const int body_y = row.y + (row_h_ - row_body_h) / 2;
       const int badge_y = row.y + (row_h_ - badge_h) / 2;
-
       row.badge = ui::block(c.parent, theme::CARD);
       lv_obj_set_size(row.badge, std::max(1, line_col_ - ui::px(5)), badge_h);
       lv_obj_set_pos(row.badge, 0, badge_y);
-
       row.line = make_label(c.parent, "", 0, body_y, std::max(1, line_col_ - ui::px(5)),
                             row_body_h, Font::BODY, theme::ON_ACCENT);
       lv_obj_set_style_text_align(row.line, LV_TEXT_ALIGN_CENTER, 0);
-
-      row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_, row_body_h,
-                                   Font::BODY, theme::INK);
-      if (!narrow_) {
+      row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_,
+                                   row_body_h, Font::BODY, theme::INK);
+      if (!narrow_ && !single_line_)
         row.track = make_label(c.parent, "", track_x_, body_y, track_w_, row_body_h,
                                Font::BODY, theme::INK);
-      }
 
       const Font time_font = compact_ ? Font::BODY_LARGE : Font::TITLE;
       const int actual_time_h = ui::line_height(time_font);
       const int time_y = row.y + (row_h_ - actual_time_h) / 2;
-      const int main_time_w = compact_ ? std::max(ui::px(44), delay_x_ - time_x_ - ui::px(2))
-                                       : std::max(ui::px(58), delay_x_ - time_x_ - ui::px(3));
+      const int main_time_w = std::max(ui::px(40), delay_x_ - time_x_ - ui::px(2));
       row.time = make_label(c.parent, "", time_x_, time_y, main_time_w, actual_time_h,
                             time_font, theme::INK);
-      row.delay = make_label(c.parent, "", delay_x_, time_y, delay_w_, row_body_h,
-                             Font::BODY, theme::MUTED);
-      if (!compact_) {
-        row.planned = make_label(c.parent, "", time_x_, time_y + actual_time_h, time_w_, row_body_h,
-                                 Font::BODY, theme::MUTED);
-      }
+      row.delay = make_label(c.parent, "", delay_x_, time_y + (actual_time_h - row_body_h) / 2,
+                             delay_w_, row_body_h, Font::BODY, theme::MUTED);
       row.summary = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY, theme::INK);
       lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
       row.overflow = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY_LARGE, theme::MUTED);
       rows_.push_back(row);
+    }
+
+    // Small transport markers beside the title. Empty selection means automatic detection.
+    for (int i = 0; i < 4; ++i) {
+      mode_icons_[i] = ui::label(c.parent, Font::BODY, theme::ACCENT);
+      lv_obj_set_size(mode_icons_[i], ui::px(24), ui::line_height(Font::BODY));
+      lv_obj_set_style_text_align(mode_icons_[i], LV_TEXT_ALIGN_CENTER, 0);
+      lv_obj_add_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
+    }
+    JsonArrayConst selected = c.options["transport_modes"].as<JsonArrayConst>();
+    for (JsonVariantConst value : selected) {
+      std::string mode = value["value"] | "";
+      if (mode.empty()) mode = array_text(value);
+      if (mode == "bus" || mode == "u_bahn" || mode == "s_bahn" || mode == "tram")
+        manual_modes_.push_back(mode);
     }
   }
   void on_state(JsonObjectConst data) override {
