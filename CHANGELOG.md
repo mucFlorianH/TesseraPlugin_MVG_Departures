@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.19 - 2026-11-07
+- Refined the departure table and responsive one-line layout.
+- Added automatic and manually selectable transport mode markers.
+- Show expected times with inline, color-coded delay changes.
+
+
 ## 0.1.1 - 2026-11-07
 - Made the sensor selection and example departure data generic.
 - Documented the root repository layout and entity-data limitation.
