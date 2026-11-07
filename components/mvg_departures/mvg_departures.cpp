@@ -216,6 +216,10 @@ class NextDepartureTile : public tessera::Tile {
     if (header_destination_) ui::set_color(header_destination_, theme::SUBTLE);
     if (header_track_) ui::set_color(header_track_, theme::SUBTLE);
     if (header_time_) ui::set_color(header_time_, theme::SUBTLE);
+    const size_t capacity = rows_.size();
+    const size_t visible = departures_.size() > capacity && capacity > 1
+                               ? capacity - 1
+                               : std::min(departures_.size(), capacity);
     for (size_t i = 0; i < rows_.size(); ++i) {
       DepartureRow &row = rows_[i];
       ui::set_fill(row.separator, tessera::Tone::NORMAL, theme::LINE);
@@ -227,7 +231,7 @@ class NextDepartureTile : public tessera::Tile {
       if (row.planned) ui::set_color(row.planned, theme::MUTED);
       if (row.summary) ui::set_color(row.summary, theme::INK);
       if (row.overflow) ui::set_color(row.overflow, theme::MUTED);
-      if (i < departures_.size() && row.badge) set_badge(row.badge, departures_[i].type);
+      if (i < visible && row.badge) set_badge(row.badge, departures_[i].type);
     }
   }
 
@@ -380,7 +384,7 @@ class NextDepartureTile : public tessera::Tile {
   lv_obj_t *header_destination_{};
   lv_obj_t *header_track_{};
   lv_obj_t *header_time_{};
-  int width_{}, rows_y_{}, row_h_{};
+  int rows_y_{}, row_h_{};
   int line_col_{}, destination_x_{}, destination_w_{}, track_x_{}, track_w_{};
   int time_x_{}, time_w_{}, delay_x_{}, delay_w_{}, planned_y_offset_{};
   bool compact_{};
