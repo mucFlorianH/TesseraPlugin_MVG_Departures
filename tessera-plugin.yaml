@@ -46,6 +46,7 @@ tiles:
       - id: transport_modes
         kind: choice
         multiple: 4
+        default: []
         label: transport_modes
         hint: transport_modes_hint
         choices:
