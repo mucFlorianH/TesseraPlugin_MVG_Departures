@@ -61,7 +61,7 @@ class NextDepartureTile : public tessera::Tile {
     const int body_h = ui::line_height(Font::BODY);
     const int line_col = c.width * (narrow_ ? 26 : 15) / 100;
     const int track_col = narrow_ ? 0 : ui::px(48);
-    const int time_col = narrow_ ? std::max(ui::px(64), c.width * 44 / 100) : ui::px(108);
+    const int time_col = narrow_ ? std::max(ui::px(64), c.width * 44 / 100) : ui::px(124);
     const int time_x = c.width - time_col;
     const int track_x = track_col > 0 ? time_x - gap - track_col : time_x;
     const int destination_x = line_col + gap;
