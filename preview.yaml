@@ -1,0 +1,27 @@
+# Plugin Bench data only; these illustrative values are not live Home Assistant data.
+tiles:
+  - tile: probe
+    name: Example departures
+    entity: sensor.departures_sample
+
+states:
+  sensor.departures_sample:
+    state: "unknown"
+    attributes:
+      departures:
+        - line: "A1"
+          destination: "Example destination"
+          platform: "Platform 2"
+          planned_departure: "12:10"
+          expected_departure: "12:12"
+          cancelled: false
+          delay: 2
+        - line: "B2"
+          destination: "Another example destination"
+          platform: "Platform 1"
+          planned_departure: "12:15"
+          expected_departure: "12:15"
+          cancelled: false
+          delay: 0
+
+time_zone: Europe/Berlin
