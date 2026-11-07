@@ -34,54 +34,57 @@ class NextDepartureTile : public tessera::Tile {
 
   void create(const tessera::TileContext &c) override {
     custom_name_ = c.name ? c.name : "";
-    compact_ = c.width < ui::px(460) || c.height < ui::px(210);
-    title_font_ = compact_ ? Font::TITLE : Font::HEADLINE;
+    narrow_ = c.width < ui::px(460);
+    compact_ = narrow_ || c.height < ui::px(210);
+    title_font_ = Font::VALUE;
 
     title_ = ui::label(c.parent, title_font_, theme::INK);
     lv_obj_set_size(title_, c.width, ui::line_height(title_font_));
     lv_obj_set_pos(title_, 0, 0);
     lv_label_set_long_mode(title_, LV_LABEL_LONG_DOT);
 
-    const int body_h = ui::line_height(Font::BODY);
-    const int title_h = ui::line_height(title_font_);
-    const int time_h = ui::line_height(Font::TITLE);
     const int gap = ui::px(6);
+    const int title_h = ui::line_height(title_font_);
+    const int header_h = ui::line_height(Font::BODY_LARGE);
+    const int header_y = title_h + gap;
+    const int line_col = c.width * (narrow_ ? 21 : 15) / 100;
+    const int track_col = narrow_ ? 0 : c.width * 13 / 100;
+    const int time_col = c.width * (narrow_ ? 30 : 24) / 100;
+    const int destination_x = line_col + gap;
+    const int track_x = c.width - time_col - track_col;
+    const int time_x = c.width - time_col;
+    const int destination_w = track_x - destination_x - (narrow_ ? 0 : gap);
 
-    if (compact_) {
-      rows_y_ = title_h + gap * 2;
-      row_h_ = std::max(body_h + gap, ui::px(30));
-    } else {
-      const int line_col = c.width * 15 / 100;
-      const int track_col = c.width * 13 / 100;
-      const int time_col = c.width * 24 / 100;
-      const int destination_x = line_col + gap;
-      const int track_x = c.width - time_col - track_col;
-      const int time_x = c.width - time_col;
-      const int header_y = title_h + gap;
-      const int header_h = ui::line_height(Font::BODY_LARGE);
+    header_bg_ = ui::block(c.parent, theme::ACCENT);
+    lv_obj_set_size(header_bg_, c.width, header_h + ui::px(4));
+    lv_obj_set_pos(header_bg_, 0, header_y - ui::px(2));
 
-      header_line_ = make_label(c.parent, "Linie", 0, header_y, line_col, header_h,
-                                Font::BODY_LARGE, theme::INK);
-      header_destination_ = make_label(c.parent, "Ziel", destination_x, header_y,
-                                       track_x - destination_x - gap, header_h,
-                                       Font::BODY_LARGE, theme::INK);
+    header_line_ = make_label(c.parent, "Linie", 0, header_y, line_col, header_h,
+                              Font::BODY_LARGE, theme::ON_ACCENT);
+    header_destination_ = make_label(c.parent, "Ziel", destination_x, header_y,
+                                     destination_w, header_h, Font::BODY_LARGE, theme::ON_ACCENT);
+    if (!narrow_) {
       header_track_ = make_label(c.parent, "Gleis", track_x, header_y, track_col - gap, header_h,
-                                 Font::BODY_LARGE, theme::INK);
-      header_time_ = make_label(c.parent, "Abfahrt", time_x, header_y, time_col, header_h,
-                                Font::BODY_LARGE, theme::INK);
-
-      rows_y_ = header_y + header_h + gap;
-      row_h_ = std::max(time_h + body_h + gap, ui::px(52));
-      line_col_ = line_col;
-      destination_x_ = destination_x;
-      destination_w_ = track_x - destination_x - gap;
-      track_x_ = track_x;
-      track_w_ = track_col - gap;
-      time_x_ = time_x;
-      time_w_ = time_col;
-      delay_x_ = time_x + time_col * 76 / 100;
-      delay_w_ = std::max(ui::px(24), time_x + time_col - delay_x_);
+                                 Font::BODY_LARGE, theme::ON_ACCENT);
     }
+    header_time_ = make_label(c.parent, "Abfahrt", time_x, header_y, time_col, header_h,
+                              Font::BODY_LARGE, theme::ON_ACCENT);
+
+    rows_y_ = header_y + header_h + gap;
+    const int body_h = ui::line_height(Font::BODY);
+    const int time_h = ui::line_height(compact_ ? Font::BODY_LARGE : Font::TITLE);
+    row_h_ = compact_ ? std::max(body_h + ui::px(12), ui::px(34))
+                      : std::max(time_h + body_h + gap, ui::px(52));
+
+    line_col_ = line_col;
+    destination_x_ = destination_x;
+    destination_w_ = std::max(1, destination_w);
+    track_x_ = track_x;
+    track_w_ = std::max(0, track_col - gap);
+    time_x_ = time_x;
+    time_w_ = time_col;
+    delay_x_ = time_x + time_col * 76 / 100;
+    delay_w_ = std::max(ui::px(24), time_x + time_col - delay_x_);
 
     const int remaining = c.height - rows_y_;
     const int count = std::max(1, remaining / std::max(1, row_h_));
@@ -92,40 +95,47 @@ class NextDepartureTile : public tessera::Tile {
       row.separator = ui::block(c.parent, theme::LINE);
       lv_obj_set_size(row.separator, c.width, std::max(1, ui::px(1)));
       lv_obj_set_pos(row.separator, 0, row.y + row_h_ - std::max(1, ui::px(1)));
+      lv_obj_add_flag(row.separator, LV_OBJ_FLAG_HIDDEN);
 
-      if (compact_) {
-        row.summary = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY, theme::INK);
-      } else {
-        const int body_h2 = ui::line_height(Font::BODY);
-        const int body_y = row.y + (row_h_ - body_h2) / 2;
-        const int badge_h = body_h2 + ui::px(6);
-        const int badge_y = row.y + (row_h_ - badge_h) / 2;
+      const int row_body_h = ui::line_height(Font::BODY);
+      const int badge_h = row_body_h + ui::px(6);
+      const int body_y = row.y + (row_h_ - row_body_h) / 2;
+      const int badge_y = row.y + (row_h_ - badge_h) / 2;
 
-        row.badge = ui::block(c.parent, theme::CARD);
-        lv_obj_set_size(row.badge, std::max(1, line_col_ - ui::px(5)), badge_h);
-        lv_obj_set_pos(row.badge, 0, badge_y);
+      row.badge = ui::block(c.parent, theme::CARD);
+      lv_obj_set_size(row.badge, std::max(1, line_col_ - ui::px(5)), badge_h);
+      lv_obj_set_pos(row.badge, 0, badge_y);
 
-        row.line = make_label(c.parent, "", 0, body_y, std::max(1, line_col_ - ui::px(5)),
-                              body_h2, Font::BODY, theme::ON_ACCENT);
-        lv_obj_set_style_text_align(row.line, LV_TEXT_ALIGN_CENTER, 0);
+      row.line = make_label(c.parent, "", 0, body_y, std::max(1, line_col_ - ui::px(5)),
+                            row_body_h, Font::BODY, theme::ON_ACCENT);
+      lv_obj_set_style_text_align(row.line, LV_TEXT_ALIGN_CENTER, 0);
 
-        row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_, body_h2,
-                                     Font::BODY, theme::INK);
-        row.track = make_label(c.parent, "", track_x_, body_y, track_w_, body_h2,
+      row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_, row_body_h,
+                                   Font::BODY, theme::INK);
+      if (!narrow_) {
+        row.track = make_label(c.parent, "", track_x_, body_y, track_w_, row_body_h,
                                Font::BODY, theme::INK);
+      }
 
-        const int main_time_w = std::max(ui::px(58), delay_x_ - time_x_ - ui::px(3));
-        const int time_y = row.y + (row_h_ - time_h) / 2;
-        row.time = make_label(c.parent, "", time_x_, time_y, main_time_w, time_h, Font::TITLE, theme::INK);
-        row.delay = make_label(c.parent, "", delay_x_, time_y, delay_w_, body_h2, Font::BODY, theme::MUTED);
-        row.planned = make_label(c.parent, "", time_x_, time_y + time_h, time_w_, body_h2,
+      const Font time_font = compact_ ? Font::BODY_LARGE : Font::TITLE;
+      const int actual_time_h = ui::line_height(time_font);
+      const int time_y = row.y + (row_h_ - actual_time_h) / 2;
+      const int main_time_w = compact_ ? std::max(ui::px(44), delay_x_ - time_x_ - ui::px(2))
+                                       : std::max(ui::px(58), delay_x_ - time_x_ - ui::px(3));
+      row.time = make_label(c.parent, "", time_x_, time_y, main_time_w, actual_time_h,
+                            time_font, theme::INK);
+      row.delay = make_label(c.parent, "", delay_x_, time_y, delay_w_, row_body_h,
+                             Font::BODY, theme::MUTED);
+      if (!compact_) {
+        row.planned = make_label(c.parent, "", time_x_, time_y + actual_time_h, time_w_, row_body_h,
                                  Font::BODY, theme::MUTED);
       }
-      row.overflow = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY, theme::MUTED);
+      row.summary = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY, theme::INK);
+      lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
+      row.overflow = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY_LARGE, theme::MUTED);
       rows_.push_back(row);
     }
   }
-
   void on_state(JsonObjectConst data) override {
     entity_name_ = data["name"] | "";
     state_ = data["state"] | "";
@@ -204,28 +214,36 @@ class NextDepartureTile : public tessera::Tile {
                            !entity_name_.empty() ? entity_name_ : "Abfahrten");
     const size_t capacity = rows_.size();
     if (departures_.empty()) {
+      clear_cells(rows_[0]);
+      lv_obj_clear_flag(rows_[0].overflow, LV_OBJ_FLAG_HIDDEN);
       ui::set_text(rows_[0].overflow, !state_.empty() && state_ != "0" ? state_ :
                                       !wait_.empty() ? "Tessera: " + wait_ : "Keine Abfahrten empfangen");
-      clear_cells(rows_[0]);
-      for (size_t i = 1; i < capacity; ++i) clear_row(rows_[i]);
+      for (size_t i = 0; i < capacity; ++i) {
+        lv_obj_add_flag(rows_[i].separator, LV_OBJ_FLAG_HIDDEN);
+        if (i > 0) clear_row(rows_[i]);
+      }
       return;
     }
 
     const bool show_overflow = departures_.size() > capacity && capacity > 1;
     const size_t shown = show_overflow ? capacity - 1 : std::min(departures_.size(), capacity);
+    const size_t content_rows = shown + (show_overflow ? 1 : 0);
     for (size_t i = 0; i < capacity; ++i) {
+      DepartureRow &row = rows_[i];
       if (show_overflow && i == capacity - 1) {
-        clear_cells(rows_[i]);
-        ui::set_text(rows_[i].overflow, "+ " + std::to_string(departures_.size() - shown) + " weitere");
+        clear_cells(row);
+        lv_obj_clear_flag(row.overflow, LV_OBJ_FLAG_HIDDEN);
+        ui::set_text(row.overflow, "+ " + std::to_string(departures_.size() - shown) + " weitere");
       } else if (i < shown) {
-        ui::set_text(rows_[i].overflow, "");
-        show_row(rows_[i], departures_[i]);
+        lv_obj_add_flag(row.overflow, LV_OBJ_FLAG_HIDDEN);
+        show_row(row, departures_[i]);
       } else {
-        clear_row(rows_[i]);
+        clear_row(row);
       }
+      if (i + 1 < content_rows) lv_obj_clear_flag(row.separator, LV_OBJ_FLAG_HIDDEN);
+      else lv_obj_add_flag(row.separator, LV_OBJ_FLAG_HIDDEN);
     }
   }
-
   void on_theme() override {
     ui::set_color(title_, theme::INK);
     if (header_line_) ui::set_color(header_line_, theme::INK);
@@ -342,72 +360,60 @@ class NextDepartureTile : public tessera::Tile {
   }
 
   void show_row(DepartureRow &row, const Departure &d) {
-    if (compact_) {
-      if (!d.summary.empty()) {
-        ui::set_text(row.summary, d.summary);
-      } else {
-        std::string text = route(d);
-        if (!d.destination.empty()) {
-          if (!text.empty()) text += " · ";
-          text += d.destination;
-        }
-        if (!d.track.empty()) text += " (" + d.track + ")";
-        if (cancelled(d)) {
-          text += " · Entfällt";
-        } else if (!d.expected.empty()) {
-          text += " | " + d.expected;
-          const int delay = delay_minutes(d);
-          if (delay != 0) {
-            text += delay > 0 ? " +" : " ";
-            text += std::to_string(delay);
-            if (!d.planned.empty()) text += " (" + d.planned + ")";
-          }
-        }
-        ui::set_text(row.summary, text);
-      }
+    if (!d.summary.empty()) {
+      clear_cells(row);
+      lv_obj_clear_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
+      ui::set_text(row.summary, d.summary);
       return;
     }
 
+    lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
     set_badge(row, d);
     ui::set_text(row.line, d.line.empty() ? d.type : d.line);
     ui::set_text(row.destination, d.destination);
-    ui::set_text(row.track, d.track);
+    if (row.track) ui::set_text(row.track, d.track);
 
-    const int title_h = ui::line_height(Font::TITLE);
-    const int body_h = ui::line_height(Font::BODY);
-    const int time_y = row.y + (row_h_ - title_h) / 2;
     if (cancelled(d)) {
-      lv_obj_set_pos(row.time, time_x_, time_y);
       ui::set_text(row.time, "Entfällt");
       ui::set_text(row.delay, "");
-      ui::set_text(row.planned, "");
+      if (row.planned) ui::set_text(row.planned, "");
       ui::set_tone(row.time, tessera::Tone::ALERT, theme::INK);
       return;
     }
 
     const int delay = delay_minutes(d);
+    if (compact_) {
+      ui::set_text(row.time, d.expected);
+      ui::set_text(row.delay, delay == 0 ? "" :
+                   std::string(delay > 0 ? "+" : "") + std::to_string(delay));
+      return;
+    }
+
+    const int title_h = ui::line_height(Font::TITLE);
+    const int body_h = ui::line_height(Font::BODY);
+    const int first_y = row.y + std::max(0, (row_h_ - title_h - body_h) / 2);
     if (delay != 0) {
-      const int first_y = row.y + std::max(0, (row_h_ - title_h - body_h) / 2);
       lv_obj_set_pos(row.time, time_x_, first_y);
       lv_obj_set_pos(row.delay, delay_x_, first_y + std::max(0, (title_h - body_h) / 2));
-      lv_obj_set_pos(row.planned, time_x_, first_y + title_h);
+      if (row.planned) lv_obj_set_pos(row.planned, time_x_, first_y + title_h);
       ui::set_tone(row.delay, tessera::Tone::ALERT, theme::MUTED);
       ui::set_text(row.time, d.expected);
       ui::set_text(row.delay, std::string(delay > 0 ? "+" : "") + std::to_string(delay));
-      ui::set_text(row.planned, d.planned.empty() ? "" : "(" + d.planned + ")");
+      if (row.planned) ui::set_text(row.planned, d.planned.empty() ? "" : "(" + d.planned + ")");
     } else {
+      const int time_y = row.y + (row_h_ - title_h) / 2;
       lv_obj_set_pos(row.time, time_x_, time_y);
       ui::set_text(row.time, d.expected);
       ui::set_color(row.delay, theme::MUTED);
       ui::set_text(row.delay, "");
-      ui::set_text(row.planned, "");
+      if (row.planned) ui::set_text(row.planned, "");
     }
   }
-
   std::string custom_name_, entity_name_, state_, wait_;
   std::vector<Departure> departures_;
   std::vector<DepartureRow> rows_;
   lv_obj_t *title_{};
+  lv_obj_t *header_bg_{};
   lv_obj_t *header_line_{};
   lv_obj_t *header_destination_{};
   lv_obj_t *header_track_{};
@@ -416,7 +422,7 @@ class NextDepartureTile : public tessera::Tile {
   int rows_y_{}, row_h_{};
   int line_col_{}, destination_x_{}, destination_w_{}, track_x_{}, track_w_{};
   int time_x_{}, time_w_{}, delay_x_{}, delay_w_{};
-  bool compact_{};
+  bool compact_{}, narrow_{};
 };
 
 void MvgDepartures::setup() {
