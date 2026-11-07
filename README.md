@@ -8,9 +8,9 @@ Ein Tessera-Plugin, das Abfahrten aus **Another MVG** als Kachel anzeigt.
 2. Dieses Repository in Tessera über **Plugins → Add with a link** hinzufügen.
 3. Einen Template-Sensor mit den Abfahrtslisten aus dem Beispiel unten anlegen.
 4. In Tessera das Plugin hinzufügen, die Kachel platzieren und den Template-Sensor auswählen.
-5. Den gewünschten Titel im Feld **Name auf dem Bildschirm** eintragen.
+5. Den gewünschten Haltestellen-Namen im Feld **Name auf dem Bildschirm** eintragen.
 
-Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor stellt die benötigten Abfahrtsdaten deshalb als getrennte Listen einfacher Werte bereit. Die Kachel zeigt bei ausreichend Fläche die Spalten Linie, Ziel, Gleis und Abfahrt. Bei kleineren Kacheln nutzt sie eine kompakte Zeile. Verspätungen erscheinen farblich markiert, die planmäßige Zeit steht darunter. Bei Überlauf zeigt die Kachel die Zahl der weiteren Abfahrten. Ohne Template-Sensor kann ein Another-MVG-Sensor weiterhin bis zu zwei Abfahrten liefern.
+Tessera überträgt Listen aus Objekten nicht vollständig. Der Template-Sensor stellt die Abfahrtsdaten deshalb als getrennte Listen einfacher Werte bereit. In größeren Kacheln erscheint der Haltestellen-Name als Überschrift über einer Abfahrtstabelle mit Linie, Ziel, Gleis und Abfahrt. Linien-Badges übernehmen die Farben der Verkehrslinie; Verspätungen werden hervorgehoben und die geplante Zeit darunter angezeigt. Bei kleineren Kacheln wechselt die Darstellung in eine kompakte Liste. Wenn mehr Abfahrten vorliegen als in die Kachel passen, wird die Zahl der übrigen angezeigt. Ein Another-MVG-Sensor ohne Template-Helfer liefert weiterhin höchstens zwei Abfahrten.
 
 ## Template-Sensor
 
@@ -53,4 +53,4 @@ template:
                | map(attribute='cancelled', default=false) | map('string') | list }}
 ```
 
-Die Vorlage erzeugt für jede Abfahrt gleich lange Listen. Nach dem Neuladen der Template-Entitäten den Helfer in Tessera auswählen und den Bildschirm mit der Plugin-Version 0.1.6 neu bauen. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
+Nach dem Neuladen der Template-Entitäten den Helfer in Tessera auswählen und den Bildschirm mit Plugin-Version 0.1.7 neu bauen. Mehr zur YAML-Konfiguration: [Home Assistant Template-Integration](https://www.home-assistant.io/integrations/template/).
