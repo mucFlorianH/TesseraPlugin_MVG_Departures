@@ -186,7 +186,7 @@ class NextDepartureTile : public tessera::Tile {
       const JsonArrayConst tracks = attributes["departure_track"].as<JsonArrayConst>();
       const JsonArrayConst expected = attributes["departure_expected"].as<JsonArrayConst>();
       const JsonArrayConst delays = attributes["departure_delay"].as<JsonArrayConst>();
-      const JsonArrayConst cancelled = attributes["departure_cancelled"].as<JsonArrayConst>();
+      const JsonArrayConst cancelled_values = attributes["departure_cancelled"].as<JsonArrayConst>();
       for (size_t i = 0; i < lines.size(); ++i) {
         Departure d;
         d.line = array_text(lines, i);
@@ -195,7 +195,7 @@ class NextDepartureTile : public tessera::Tile {
         d.track = array_text(tracks, i);
         d.expected = array_text(expected, i);
         d.delay = array_text(delays, i);
-        d.cancelled = array_text(cancelled, i);
+        d.cancelled = array_text(cancelled_values, i);
         if (!d.line.empty() || !d.destination.empty() || !d.expected.empty() || cancelled(d))
           departures_.push_back(d);
       }
