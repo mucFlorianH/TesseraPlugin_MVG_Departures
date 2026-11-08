@@ -202,8 +202,8 @@ class NextDepartureTile : public tessera::Tile {
   void on_tick(uint32_t) override {
     const bool custom_title = !custom_name_.empty() && custom_name_ != entity_name_;
     if (title_) {
-      ui::set_text(title_, !station_name_.empty() ? station_name_ :
-                             custom_title ? custom_name_ : "Abfahrten");
+      ui::set_text(title_, custom_title ? custom_name_ :
+                             !station_name_.empty() ? station_name_ : "Abfahrten");
       update_mode_icons();
     }
     const size_t capacity = rows_.size();
