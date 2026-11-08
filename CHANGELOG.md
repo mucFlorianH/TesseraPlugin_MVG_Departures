@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.29 - 2026-11-08
+- Use only two station-title sizes: compact for one-column or one-row tiles, and a consistent smaller heading for all other tiles.
+
+
 ## 0.1.28 - 2026-11-08
 - Use a custom on-screen name as the station title; fall back to the selected sensor's `station_name` when it is blank.
 
