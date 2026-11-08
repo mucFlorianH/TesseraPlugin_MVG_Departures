@@ -1,6 +1,6 @@
 # Reads departures from a flattened Home Assistant template sensor.
 id: mvg_departures
-version: 0.1.29
+version: 0.1.30
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
