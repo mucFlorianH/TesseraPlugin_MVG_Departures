@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.34 - 2026-11-08
+- Slow down scrolling destination labels.
+- Combine the destination and track in one- and two-column tiles; numeric tracks use the `Gl.` prefix.
+- In one-column tiles, show line, departure time, then the scrolling destination and track.
+
 ## 0.1.33 - 2026-11-08
 - Scroll destinations that do not fit their column.
 - Merge matching departures and combine distinct destinations in the tile.
