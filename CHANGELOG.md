@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.27 - 2026-11-08
+- Offer only flattened Home Assistant template sensors; remove support for selecting raw Another MVG entities.
+
+
 ## 0.1.26 - 2026-11-07
 - Fix a C++ name collision that prevented the departure component from compiling.
 
