@@ -447,11 +447,10 @@ class NextDepartureTile : public tessera::Tile {
     const std::string destination_text = track_in_destination_ ? destination_with_track(d) : d.destination;
     if (show_destination && row.destination) {
       lv_obj_clear_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
-      // Set scroll mode before the final dimensions and text. LVGL then starts its own
-      // overflow animation using the actual rendered font metrics.
-      lv_label_set_long_mode(row.destination, LV_LABEL_LONG_SCROLL_CIRCULAR);
-      lv_obj_set_size(row.destination, destination_w_, lv_obj_get_height(row.destination));
+      // Keep the label's original geometry and install text before enabling circular
+      // scrolling. LVGL only animates when its own font metrics detect actual overflow.
       ui::set_text(row.destination, destination_text);
+      lv_label_set_long_mode(row.destination, LV_LABEL_LONG_SCROLL_CIRCULAR);
     } else if (row.destination) {
       lv_obj_add_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
     }
