@@ -6,28 +6,16 @@ tiles:
 
 states:
   sensor.departures_sample:
-    state: "10:27 Bus 175 to Example destination"
+    name: Example stop
+    state: "2"
     attributes:
-      departures:
-        - transport_type: BUS
-          label: "175"
-          destination: Example destination
-          track: Bus
-          planned_departure: "10:27"
-          expected_departure: "10:27"
-          cancelled: false
-          delay: 0
-          trainType: ""
-          time_diff: 491
-        - transport_type: BUS
-          label: "175"
-          destination: Another example destination
-          track: Bus
-          planned_departure: "10:31"
-          expected_departure: "10:31"
-          cancelled: false
-          delay: 0
-          trainType: ""
-          time_diff: 731
+      station_name: Example stop
+      departure_type: [BUS, BUS]
+      departure_line: ["X1", "X1"]
+      departure_destination: ["Example destination", "Another destination"]
+      departure_track: [Bus, Bus]
+      departure_expected: ["10:27", "10:31"]
+      departure_delay: [0, 0]
+      departure_cancelled: ["false", "false"]
 
 time_zone: Europe/Berlin
