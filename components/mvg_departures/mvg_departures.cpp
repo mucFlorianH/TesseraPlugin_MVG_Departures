@@ -51,10 +51,10 @@ class NextDepartureTile : public tessera::Tile {
     title_font_ = (one_column_ || single_line_) ? Font::BODY : Font::HEADLINE;
     const int title_h = ui::line_height(title_font_);
     const int station_title_padding = ui::px(4);
-    const int station_title_area_h = title_h + 2 * station_title_padding;
+    station_title_area_h_ = title_h + 2 * station_title_padding;
     title_ = ui::label(c.parent, title_font_, theme::INK);
     lv_obj_set_size(title_, c.width, title_h);
-    lv_obj_set_pos(title_, 0, (station_title_area_h - title_h) / 2);
+    lv_obj_set_pos(title_, 0, (station_title_area_h_ - title_h) / 2);
     lv_label_set_long_mode(title_, LV_LABEL_LONG_DOT);
 
     const int gap = ui::px(6);
@@ -70,7 +70,7 @@ class NextDepartureTile : public tessera::Tile {
     if (!headerless_) {
       const int header_h = ui::line_height(Font::BODY_LARGE);
       const int header_padding = ui::px(6);
-      const int header_y = station_title_area_h + gap;
+      const int header_y = station_title_area_h_ + gap;
       const int header_band_h = header_h + 2 * header_padding;
       header_bg_ = ui::block(c.parent, theme::TRACK);
       lv_obj_set_size(header_bg_, c.width + bleed_left + bleed_right, header_band_h);
@@ -92,13 +92,13 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_style_text_align(header_time_, LV_TEXT_ALIGN_RIGHT, 0);
       rows_y_ = header_y + header_band_h + gap;
     } else {
-      rows_y_ = station_title_area_h + gap;
+      rows_y_ = station_title_area_h_ + gap;
     }
 
     const int time_font_h = ui::line_height(compact_ ? Font::BODY_LARGE : Font::TITLE);
-    row_h_ = single_line_ ? std::max(body_h + ui::px(12), ui::px(34)) :
-             compact_ ? std::max(body_h + ui::px(12), ui::px(34)) :
-                        std::max(time_font_h + body_h + gap, ui::px(52));
+    row_h_ = single_line_ ? std::max(body_h + ui::px(8), ui::px(32)) :
+             compact_ ? std::max(body_h + ui::px(8), ui::px(32)) :
+                        std::max(time_font_h + body_h + gap - ui::px(4), ui::px(48));
     line_col_ = line_col;
     destination_x_ = destination_x;
     destination_w_ = destination_w;
@@ -301,8 +301,11 @@ class NextDepartureTile : public tessera::Tile {
         lv_obj_clear_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
         const int w = ui::px(widths[i]);
         const int h = std::min(ui::px(32), ui::line_height(title_font_));
+        const Font icon_font = (i == 1 || i == 2) ? Font::HEADLINE : Font::BODY;
         lv_obj_set_size(mode_icons_[i], w, h);
-        lv_obj_set_pos(mode_icons_[i], x, (ui::line_height(title_font_) - h) / 2);
+        lv_obj_set_pos(mode_icons_[i], x, (station_title_area_h_ - h) / 2);
+        lv_obj_set_style_pad_top(mode_icons_[i],
+                                 std::max(0, (h - ui::line_height(icon_font)) / 2), 0);
         lv_obj_set_style_radius(mode_icons_[i], (i == 0 || i == 2) ? h / 2 : ui::px(4), 0);
         lv_obj_set_style_bg_opa(mode_icons_[i], LV_OPA_COVER, 0);
         lv_obj_set_style_bg_color(mode_icons_[i], lv_color_hex(fills[i]), 0);
@@ -313,7 +316,7 @@ class NextDepartureTile : public tessera::Tile {
         lv_obj_add_flag(mode_icons_[i], LV_OBJ_FLAG_HIDDEN);
       }
     }
-    lv_obj_set_pos(title_, 0, 0);
+    lv_obj_set_pos(title_, 0, (station_title_area_h_ - ui::line_height(title_font_)) / 2);
     lv_obj_set_width(title_, std::max(1, tile_width_ - (shown ? total_width + ui::px(8) : 0)));
   }
 
@@ -436,7 +439,7 @@ class NextDepartureTile : public tessera::Tile {
   std::string custom_name_, entity_name_, station_name_, state_, wait_;
   std::vector<std::string> manual_modes_;
   lv_obj_t *mode_icons_[4]{};
-  int tile_width_{};
+  int tile_width_{}, station_title_area_h_{};
   std::vector<Departure> departures_;
   std::vector<DepartureRow> rows_;
   lv_obj_t *title_{};
