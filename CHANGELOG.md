@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.36 - 2026-11-08
+- Enable overflow scrolling reliably by setting the final label mode, dimensions, and text in order.
+- Give 1x1 tiles a compact layout: line and departure at the top, destination and track scrolling across the bottom, without a station title.
+
 ## 0.1.35 - 2026-11-08
 - Fix the marquee animation configuration for the LVGL API used by Tessera.
 - Add longer pauses before and between circular marquee passes.
