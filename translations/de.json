@@ -7,7 +7,7 @@
     "name": "Another MVG departures",
     "summary": "Zeigt Abfahrten aus Another MVG als Tessera-Kachel.",
     "departure_tile": "Abfahrten",
-    "probe_example": "Wähle einen Another-MVG-Sensor oder einen Template-Sensor mit aufbereiteten Abfahrten.",
+    "probe_example": "Wähle einen Home-Assistant-Template-Sensor mit getrennten Abfahrtsattributen.",
     "transport_modes": "Verkehrsmittel",
     "transport_modes_hint": "Leer lassen, um Verkehrsmittel aus den Abfahrten zu erkennen, oder gewünschte Verkehrsmittel auswählen.",
     "mode_bus": "Bus",
