@@ -50,9 +50,11 @@ class NextDepartureTile : public tessera::Tile {
     headerless_ = narrow_ || single_line_;
     title_font_ = (one_column_ || single_line_) ? Font::BODY : Font::HEADLINE;
     const int title_h = ui::line_height(title_font_);
+    const int station_title_padding = ui::px(4);
+    const int station_title_area_h = title_h + 2 * station_title_padding;
     title_ = ui::label(c.parent, title_font_, theme::INK);
     lv_obj_set_size(title_, c.width, title_h);
-    lv_obj_set_pos(title_, 0, 0);
+    lv_obj_set_pos(title_, 0, (station_title_area_h - title_h) / 2);
     lv_label_set_long_mode(title_, LV_LABEL_LONG_DOT);
 
     const int gap = ui::px(6);
@@ -68,7 +70,7 @@ class NextDepartureTile : public tessera::Tile {
     if (!headerless_) {
       const int header_h = ui::line_height(Font::BODY_LARGE);
       const int header_padding = ui::px(6);
-      const int header_y = title_h + gap;
+      const int header_y = station_title_area_h + gap;
       const int header_band_h = header_h + 2 * header_padding;
       header_bg_ = ui::block(c.parent, theme::TRACK);
       lv_obj_set_size(header_bg_, c.width + bleed_left + bleed_right, header_band_h);
@@ -90,7 +92,7 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_style_text_align(header_time_, LV_TEXT_ALIGN_RIGHT, 0);
       rows_y_ = header_y + header_band_h + gap;
     } else {
-      rows_y_ = title_h + gap;
+      rows_y_ = station_title_area_h + gap;
     }
 
     const int time_font_h = ui::line_height(compact_ ? Font::BODY_LARGE : Font::TITLE);
