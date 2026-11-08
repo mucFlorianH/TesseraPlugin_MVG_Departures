@@ -148,7 +148,7 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_style_text_align(row.line, LV_TEXT_ALIGN_CENTER, 0);
       row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_,
                                    row_body_h, Font::BODY, theme::INK);
-      lv_obj_set_style_anim_speed(row.destination, 50, LV_PART_MAIN);
+      lv_obj_set_style_anim_speed(row.destination, 240, LV_PART_MAIN);
       if (!track_in_destination_) {
         row.track = make_label(c.parent, "", track_x_, body_y, track_w_, row_body_h,
                                Font::BODY, theme::INK);
