@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.30 - 2026-11-08
+- Give the table heading band more height and center its unchanged text vertically.
+
+
 ## 0.1.29 - 2026-11-08
 - Use only two station-title sizes: compact for one-column or one-row tiles, and a consistent smaller heading for all other tiles.
 
