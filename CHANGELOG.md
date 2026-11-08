@@ -1,7 +1,11 @@
 # Changelog
 
+## 0.1.35 - 2026-11-08
+- Fix the marquee animation configuration for the LVGL API used by Tessera.
+- Add longer pauses before and between circular marquee passes.
+
 ## 0.1.34 - 2026-11-08
-- Slow down scrolling destination labels.
+- Use a per-label marquee animation (the later compatibility fix is in 0.1.35).
 - Combine the destination and track in one- and two-column tiles; numeric tracks use the `Gl.` prefix.
 - In one-column tiles, show line, departure time, then the scrolling destination and track.
 
