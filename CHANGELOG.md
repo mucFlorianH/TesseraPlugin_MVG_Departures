@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.31 - 2026-11-08
+- Increase the station-title area and center its existing title vertically.
+
+
 ## 0.1.30 - 2026-11-08
 - Give the table heading band more height and center its unchanged text vertically.
 
