@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.33 - 2026-11-08
+- Scroll destinations that do not fit their column.
+- Merge matching departures and combine distinct destinations in the tile.
+
+
 ## 0.1.32 - 2026-11-08
 - Vertically center the station title and transport markers in the full title area.
 - Slightly reduce departure row heights to fit more rows.
