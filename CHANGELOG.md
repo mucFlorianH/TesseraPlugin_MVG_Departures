@@ -1,7 +1,10 @@
 # Changelog
 
+## 0.1.37 - 2026-11-08
+- Restore destination text rendering by preserving label dimensions and setting text before enabling marquee mode.
+
 ## 0.1.36 - 2026-11-08
-- Enable overflow scrolling reliably by setting the final label mode, dimensions, and text in order.
+- Enable circular marquee mode on destination labels when shown (rendering regression fixed in 0.1.37).
 - Give 1x1 tiles a compact layout: line and departure at the top, destination and track scrolling across the bottom, without a station title.
 
 ## 0.1.35 - 2026-11-08
