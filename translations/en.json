@@ -7,7 +7,7 @@
     "name": "Another MVG departures",
     "summary": "Shows upcoming departures from Another MVG as a Tessera tile.",
     "departure_tile": "Departures",
-    "probe_example": "Select an Another MVG sensor or a template sensor with flattened departures.",
+    "probe_example": "Select a Home Assistant template sensor with flattened departure attributes.",
     "transport_modes": "Transport modes",
     "transport_modes_hint": "Leave empty to detect modes from departures, or choose the modes you want to show.",
     "mode_bus": "Bus",
