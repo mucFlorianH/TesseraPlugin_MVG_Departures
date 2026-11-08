@@ -48,8 +48,7 @@ class NextDepartureTile : public tessera::Tile {
     single_line_ = c.rows <= 1 || c.height < ui::px(90);
     compact_ = narrow_ || c.height < ui::px(210);
     headerless_ = narrow_ || single_line_;
-    title_font_ = (one_column_ || single_line_) ? Font::BODY :
-                  compact_ ? Font::HEADLINE : Font::VALUE;
+    title_font_ = (one_column_ || single_line_) ? Font::BODY : Font::HEADLINE;
     const int title_h = ui::line_height(title_font_);
     title_ = ui::label(c.parent, title_font_, theme::INK);
     lv_obj_set_size(title_, c.width, title_h);
