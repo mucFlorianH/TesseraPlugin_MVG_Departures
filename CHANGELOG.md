@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.32 - 2026-11-08
+- Vertically center the station title and transport markers in the full title area.
+- Slightly reduce departure row heights to fit more rows.
+
+
 ## 0.1.31 - 2026-11-08
 - Increase the station-title area and center its existing title vertically.
 
