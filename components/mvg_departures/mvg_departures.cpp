@@ -27,6 +27,20 @@ struct DepartureRow {
   lv_obj_t *separator{};
 };
 
+static lv_anim_t marquee_animation;
+static lv_style_t marquee_style;
+static bool marquee_style_initialized{};
+
+static void initialize_marquee_style() {
+  if (marquee_style_initialized) return;
+  lv_anim_init(&marquee_animation);
+  lv_anim_set_delay(&marquee_animation, 1200);
+  lv_anim_set_repeat_delay(&marquee_animation, 2400);
+  lv_style_init(&marquee_style);
+  lv_style_set_anim(&marquee_style, &marquee_animation);
+  marquee_style_initialized = true;
+}
+
 static std::string destination_with_track(const Departure &d) {
   if (d.track.empty()) return d.destination;
   const bool numeric = std::all_of(d.track.begin(), d.track.end(), [](unsigned char c) {
@@ -57,6 +71,7 @@ class NextDepartureTile : public tessera::Tile {
     two_column_ = c.columns == 2;
     narrow_ = one_column_ || c.width < ui::px(320);
     track_in_destination_ = one_column_ || two_column_ || narrow_;
+    initialize_marquee_style();
     single_line_ = c.rows <= 1 || c.height < ui::px(90);
     compact_ = narrow_ || c.height < ui::px(210);
     headerless_ = narrow_ || single_line_;
@@ -148,7 +163,7 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_style_text_align(row.line, LV_TEXT_ALIGN_CENTER, 0);
       row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_,
                                    row_body_h, Font::BODY, theme::INK);
-      lv_obj_set_style_anim_speed(row.destination, 240, LV_PART_MAIN);
+      lv_obj_add_style(row.destination, &marquee_style, LV_STATE_DEFAULT);
       if (!track_in_destination_) {
         row.track = make_label(c.parent, "", track_x_, body_y, track_w_, row_body_h,
                                Font::BODY, theme::INK);
