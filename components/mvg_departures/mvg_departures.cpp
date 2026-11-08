@@ -12,7 +12,7 @@ using tessera::Font;
 namespace ui = tessera::ui;
 
 struct Departure {
-  std::string type, line, destination, track, expected, delay, cancelled, summary;
+  std::string type, line, destination, track, expected, delay, cancelled;
 };
 
 struct DepartureRow {
@@ -23,7 +23,6 @@ struct DepartureRow {
   lv_obj_t *track{};
   lv_obj_t *time{};
   lv_obj_t *delay{};
-  lv_obj_t *summary{};
   lv_obj_t *overflow{};
   lv_obj_t *separator{};
 };
@@ -143,8 +142,6 @@ class NextDepartureTile : public tessera::Tile {
       row.delay = make_label(c.parent, "", delay_x_, time_y + (actual_time_h - row_body_h) / 2,
                              delay_w_, row_body_h, Font::BODY, theme::MUTED);
       lv_obj_set_style_text_align(row.delay, LV_TEXT_ALIGN_LEFT, 0);
-      row.summary = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY, theme::INK);
-      lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
       row.overflow = make_label(c.parent, "", 0, row.y, c.width, row_h_, Font::BODY_LARGE, theme::MUTED);
       rows_.push_back(row);
     }
@@ -180,72 +177,25 @@ class NextDepartureTile : public tessera::Tile {
     const JsonObjectConst attributes = data["attributes"].as<JsonObjectConst>();
     station_name_ = attributes["station_name"] | "";
     const JsonArrayConst lines = attributes["departure_line"].as<JsonArrayConst>();
-    if (!lines.isNull() && lines.size() > 0) {
-      const JsonArrayConst types = attributes["departure_type"].as<JsonArrayConst>();
-      const JsonArrayConst destinations = attributes["departure_destination"].as<JsonArrayConst>();
-      const JsonArrayConst tracks = attributes["departure_track"].as<JsonArrayConst>();
-      const JsonArrayConst expected = attributes["departure_expected"].as<JsonArrayConst>();
-      const JsonArrayConst delays = attributes["departure_delay"].as<JsonArrayConst>();
-      const JsonArrayConst cancelled_values = attributes["departure_cancelled"].as<JsonArrayConst>();
-      for (size_t i = 0; i < lines.size(); ++i) {
-        Departure d;
-        d.line = array_text(lines, i);
-        d.type = array_text(types, i);
-        d.destination = array_text(destinations, i);
-        d.track = array_text(tracks, i);
-        d.expected = array_text(expected, i);
-        d.delay = array_text(delays, i);
-        d.cancelled = array_text(cancelled_values, i);
-        if (!d.line.empty() || !d.destination.empty() || !d.expected.empty() || cancelled(d))
-          departures_.push_back(d);
-      }
-    }
-
-    // Older template sensors may expose only preformatted strings; keep those usable.
-    if (departures_.empty()) {
-      const JsonArrayConst rows = attributes["departures"].as<JsonArrayConst>();
-      for (JsonVariantConst row : rows) {
-        if (row.is<const char *>()) {
-          const char *text = row.as<const char *>();
-          if (text && *text) {
-            Departure d;
-            d.summary = text;
-            departures_.push_back(d);
-          }
-        } else if (row.is<JsonObjectConst>()) {
-          const JsonObjectConst item = row.as<JsonObjectConst>();
-          Departure d;
-          d.type = item["transport_type"] | "";
-          d.line = item["label"] | "";
-          d.destination = item["destination"] | "";
-          d.track = item["track"] | "";
-          d.expected = item["expected_departure"] | "";
-          d.delay = array_text(item["delay"]);
-          d.cancelled = array_text(item["cancelled"]);
-          departures_.push_back(d);
-        }
-      }
-    }
-
-    // For a direct Another MVG sensor, Tessera maps the first two object rows to scalar fields.
-    if (departures_.empty()) {
-      const JsonArrayConst direct_cancelled = attributes["departure_cancelled"].as<JsonArrayConst>();
-      for (int i = 1; i <= 2; ++i) {
-        char suffix[4];
-        snprintf(suffix, sizeof(suffix), "_%d", i);
-        Departure d;
-        d.type = read(attributes, "transport_type", suffix);
-        d.line = read(attributes, "line", suffix);
-        d.destination = read(attributes, "destination", suffix);
-        d.expected = read(attributes, "departure_time", suffix);
-        d.cancelled = array_text(direct_cancelled, i - 1);
-        if (cancelled(d)) {
-          departures_.push_back(d);
-          continue;
-        }
-        d.summary = format_departure(d.type, d.line, d.destination, d.expected);
-        if (!d.summary.empty()) departures_.push_back(d);
-      }
+    const JsonArrayConst types = attributes["departure_type"].as<JsonArrayConst>();
+    const JsonArrayConst destinations = attributes["departure_destination"].as<JsonArrayConst>();
+    const JsonArrayConst tracks = attributes["departure_track"].as<JsonArrayConst>();
+    const JsonArrayConst expected = attributes["departure_expected"].as<JsonArrayConst>();
+    const JsonArrayConst delays = attributes["departure_delay"].as<JsonArrayConst>();
+    const JsonArrayConst cancelled_values = attributes["departure_cancelled"].as<JsonArrayConst>();
+    const size_t count = std::max({lines.size(), types.size(), destinations.size(), tracks.size(),
+                                   expected.size(), delays.size(), cancelled_values.size()});
+    for (size_t i = 0; i < count; ++i) {
+      Departure d;
+      d.line = array_text(lines, i);
+      d.type = array_text(types, i);
+      d.destination = array_text(destinations, i);
+      d.track = array_text(tracks, i);
+      d.expected = array_text(expected, i);
+      d.delay = array_text(delays, i);
+      d.cancelled = array_text(cancelled_values, i);
+      if (!d.line.empty() || !d.destination.empty() || !d.expected.empty() || cancelled(d))
+        departures_.push_back(d);
     }
   }
 
@@ -301,7 +251,6 @@ class NextDepartureTile : public tessera::Tile {
       if (row.track) ui::set_color(row.track, theme::INK);
       if (row.time) ui::set_color(row.time, theme::INK);
       if (row.delay) ui::set_color(row.delay, theme::MUTED);
-      if (row.summary) ui::set_color(row.summary, theme::INK);
       if (row.overflow) ui::set_color(row.overflow, theme::MUTED);
       if (i < visible && row.badge) set_badge(row, departures_[i]);
     }
@@ -388,12 +337,6 @@ class NextDepartureTile : public tessera::Tile {
     return "";
   }
 
-  static std::string read(JsonObjectConst attributes, const char *field, const char *suffix) {
-    char key[40];
-    snprintf(key, sizeof(key), "%s%s", field, suffix);
-    return attributes[key] | "";
-  }
-
   static bool cancelled(const Departure &d) {
     return d.cancelled == "true" || d.cancelled == "True" || d.cancelled == "1" || d.cancelled == "yes";
   }
@@ -403,31 +346,6 @@ class NextDepartureTile : public tessera::Tile {
     char *end = nullptr;
     const long value = std::strtol(d.delay.c_str(), &end, 10);
     return end == d.delay.c_str() ? 0 : static_cast<int>(value);
-  }
-
-  static std::string format_departure(const std::string &type, const std::string &line,
-                                      const std::string &destination, const std::string &time) {
-    std::string text;
-    if (!type.empty()) text = type;
-    if (!line.empty()) {
-      if (!text.empty()) text += " ";
-      text += line;
-    }
-    if (!destination.empty()) {
-      if (!text.empty()) text += " - ";
-      text += destination;
-    }
-    if (!time.empty()) {
-      if (!text.empty()) text += " | ";
-      text += time;
-    }
-    return text;
-  }
-
-  static std::string route(const Departure &d) {
-    if (d.type.empty()) return d.line;
-    if (d.line.empty()) return d.type;
-    return d.type + " " + d.line;
   }
 
   static void set_badge(DepartureRow &row, const Departure &d) {
@@ -444,7 +362,6 @@ class NextDepartureTile : public tessera::Tile {
     if (row.track) { ui::set_text(row.track, ""); lv_obj_add_flag(row.track, LV_OBJ_FLAG_HIDDEN); }
     if (row.time) { ui::set_text(row.time, ""); lv_obj_add_flag(row.time, LV_OBJ_FLAG_HIDDEN); }
     if (row.delay) { ui::set_text(row.delay, ""); lv_obj_add_flag(row.delay, LV_OBJ_FLAG_HIDDEN); }
-    if (row.summary) { ui::set_text(row.summary, ""); lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN); }
     if (row.badge) lv_obj_add_flag(row.badge, LV_OBJ_FLAG_HIDDEN);
   }
 
@@ -455,14 +372,6 @@ class NextDepartureTile : public tessera::Tile {
   }
 
   void show_row(DepartureRow &row, const Departure &d) {
-    if (!d.summary.empty()) {
-      clear_cells(row);
-      lv_obj_clear_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
-      ui::set_text(row.summary, d.summary);
-      return;
-    }
-
-    lv_obj_add_flag(row.summary, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(row.badge, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(row.line, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(row.time, LV_OBJ_FLAG_HIDDEN);
