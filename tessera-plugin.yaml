@@ -1,6 +1,6 @@
-# Reads departures from a selected Another MVG sensor or a structured Home Assistant template sensor.
+# Reads departures from a flattened Home Assistant template sensor.
 id: mvg_departures
-version: 0.1.26
+version: 0.1.27
 api: "0.15"
 icon: bus
 maintainer: mucFlorianH
@@ -20,7 +20,6 @@ tiles:
     memory: 500
     domains: [sensor]
     attributes:
-      - departures
       - departure_type
       - departure_line
       - departure_destination
@@ -29,18 +28,9 @@ tiles:
       - departure_delay
       - departure_cancelled
       - station_name
-    has_attributes: [departures]
-    fields:
-      transport_type_1: { path: "departures[0].transport_type" }
-      line_1: { path: "departures[0].label" }
-      destination_1: { path: "departures[0].destination" }
-      departure_time_1: { path: "departures[0].expected_departure" }
-      transport_type_2: { path: "departures[1].transport_type" }
-      line_2: { path: "departures[1].label" }
-      destination_2: { path: "departures[1].destination" }
-      departure_time_2: { path: "departures[1].expected_departure" }
+    has_attributes: [departure_line]
     example: probe_example
-    preview: { badge: "{line_1}", title: "{destination_1}", value: "{departure_time_1}" }
+    preview: { title: "{station_name}", value: "{state}" }
     options:
       - id: transport_modes
         kind: choice
