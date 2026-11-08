@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.28 - 2026-11-08
+- Use a custom on-screen name as the station title; fall back to the selected sensor's `station_name` when it is blank.
+
+
 ## 0.1.27 - 2026-11-08
 - Offer only flattened Home Assistant template sensors; remove support for selecting raw Another MVG entities.
 
