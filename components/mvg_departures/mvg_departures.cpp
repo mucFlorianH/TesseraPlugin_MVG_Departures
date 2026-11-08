@@ -69,6 +69,7 @@ class NextDepartureTile : public tessera::Tile {
     const int bleed_right = tile ? lv_obj_get_style_space_right(tile, LV_PART_MAIN) : 0;
     one_column_ = c.columns <= 1;
     two_column_ = c.columns == 2;
+    compact_one_ = one_column_ && c.rows <= 1;
     narrow_ = one_column_ || c.width < ui::px(320);
     track_in_destination_ = one_column_ || two_column_ || narrow_;
     initialize_marquee_style();
@@ -78,27 +79,34 @@ class NextDepartureTile : public tessera::Tile {
     title_font_ = (one_column_ || single_line_) ? Font::BODY : Font::HEADLINE;
     const int title_h = ui::line_height(title_font_);
     const int station_title_padding = ui::px(4);
-    station_title_area_h_ = title_h + 2 * station_title_padding;
+    station_title_area_h_ = compact_one_ ? 0 : title_h + 2 * station_title_padding;
     title_ = ui::label(c.parent, title_font_, theme::INK);
+    if (compact_one_) lv_obj_add_flag(title_, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_size(title_, c.width, title_h);
     lv_obj_set_pos(title_, 0, (station_title_area_h_ - title_h) / 2);
     lv_label_set_long_mode(title_, LV_LABEL_LONG_DOT);
 
     const int gap = ui::px(6);
     const int body_h = ui::line_height(Font::BODY);
-    const int line_col = one_column_ ? std::max(ui::px(52), c.width * 24 / 100)
-                                      : c.width * (narrow_ ? 26 : 15) / 100;
+    const int line_col = compact_one_ ? std::max(ui::px(52), c.width * 34 / 100)
+                                      : one_column_ ? std::max(ui::px(52), c.width * 24 / 100)
+                                                    : c.width * (narrow_ ? 26 : 15) / 100;
     const int track_col = track_in_destination_ ? 0 : ui::px(48);
-    const int time_col = one_column_ ? std::max(ui::px(68), c.width * 30 / 100)
-                                     : narrow_ ? std::max(ui::px(64), c.width * 44 / 100)
-                                               : ui::px(124);
+    const int time_col = compact_one_ ? std::max(ui::px(68), c.width - line_col - gap)
+                                     : one_column_ ? std::max(ui::px(68), c.width * 30 / 100)
+                                                   : narrow_ ? std::max(ui::px(64), c.width * 44 / 100)
+                                                             : ui::px(124);
     const int time_x = one_column_ ? line_col + gap : c.width - time_col;
     const int track_x = track_col > 0 ? time_x - gap - track_col : time_x;
-    const int destination_x = one_column_ ? time_x + time_col + gap : line_col + gap;
-    const int destination_w = one_column_
-                                 ? std::max(0, c.width - destination_x)
-                                 : std::max(0, (track_col > 0 ? track_x - gap : time_x - gap) -
-                                                   destination_x);
+    int destination_x = one_column_ ? time_x + time_col + gap : line_col + gap;
+    int destination_w = one_column_
+                            ? std::max(0, c.width - destination_x)
+                            : std::max(0, (track_col > 0 ? track_x - gap : time_x - gap) -
+                                              destination_x);
+    if (compact_one_) {
+      destination_x = 0;
+      destination_w = c.width;
+    }
 
     if (!headerless_) {
       const int header_h = ui::line_height(Font::BODY_LARGE);
@@ -125,7 +133,7 @@ class NextDepartureTile : public tessera::Tile {
       lv_obj_set_style_text_align(header_time_, LV_TEXT_ALIGN_RIGHT, 0);
       rows_y_ = header_y + header_band_h + gap;
     } else {
-      rows_y_ = station_title_area_h_ + gap;
+      rows_y_ = compact_one_ ? 0 : station_title_area_h_ + gap;
     }
 
     const int time_font_h = ui::line_height(compact_ ? Font::BODY_LARGE : Font::TITLE);
@@ -146,7 +154,7 @@ class NextDepartureTile : public tessera::Tile {
     rows_.reserve(count);
     for (int i = 0; i < count; ++i) {
       DepartureRow row;
-      row.y = single_line_ ? c.height - row_h_ : rows_y_ + i * row_h_;
+      row.y = compact_one_ ? 0 : single_line_ ? c.height - row_h_ : rows_y_ + i * row_h_;
       row.separator = ui::block(c.parent, theme::LINE);
       lv_obj_set_size(row.separator, c.width, std::max(1, ui::px(1)));
       lv_obj_set_pos(row.separator, 0, row.y + row_h_ - std::max(1, ui::px(1)));
@@ -161,7 +169,8 @@ class NextDepartureTile : public tessera::Tile {
       row.line = make_label(c.parent, "", 0, body_y, std::max(1, line_col_ - ui::px(5)),
                             row_body_h, Font::BODY, theme::ON_ACCENT);
       lv_obj_set_style_text_align(row.line, LV_TEXT_ALIGN_CENTER, 0);
-      row.destination = make_label(c.parent, "", destination_x_, body_y, destination_w_,
+      const int destination_y = compact_one_ ? c.height - row_body_h : body_y;
+      row.destination = make_label(c.parent, "", destination_x_, destination_y, destination_w_,
                                    row_body_h, Font::BODY, theme::INK);
       lv_obj_add_style(row.destination, &marquee_style, LV_STATE_DEFAULT);
       if (!track_in_destination_) {
@@ -438,10 +447,11 @@ class NextDepartureTile : public tessera::Tile {
     const std::string destination_text = track_in_destination_ ? destination_with_track(d) : d.destination;
     if (show_destination && row.destination) {
       lv_obj_clear_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
+      // Set scroll mode before the final dimensions and text. LVGL then starts its own
+      // overflow animation using the actual rendered font metrics.
+      lv_label_set_long_mode(row.destination, LV_LABEL_LONG_SCROLL_CIRCULAR);
+      lv_obj_set_size(row.destination, destination_w_, lv_obj_get_height(row.destination));
       ui::set_text(row.destination, destination_text);
-      const bool destination_overflows = ui::text_width(destination_text, Font::BODY) > destination_w_;
-      lv_label_set_long_mode(row.destination, destination_overflows ?
-                             LV_LABEL_LONG_SCROLL_CIRCULAR : LV_LABEL_LONG_CLIP);
     } else if (row.destination) {
       lv_obj_add_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
     }
@@ -507,7 +517,7 @@ class NextDepartureTile : public tessera::Tile {
   int line_col_{}, destination_x_{}, destination_w_{}, track_x_{}, track_w_{};
   int time_x_{}, time_w_{}, delay_x_{}, delay_w_{};
   bool compact_{}, narrow_{}, single_line_{}, headerless_{}, one_column_{}, two_column_{},
-       track_in_destination_{};
+       compact_one_{}, track_in_destination_{};
 };
 
 void MvgDepartures::setup() {
