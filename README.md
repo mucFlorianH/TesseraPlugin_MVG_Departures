@@ -11,7 +11,7 @@ Ein Tessera-Plugin, das Abfahrten aus **Another MVG** als Kachel anzeigt.
 
 Direkte Another-MVG-Sensoren werden nicht angeboten: Tessera benötigt für diese Kachel einen Template-Sensor mit getrennten Listen einfacher Werte. Das Attribut `departure_line` kennzeichnet einen passenden Sensor. Die Datenfelder werden als parallele Listen übertragen; der Eintrag an derselben Position in jeder Liste gehört zu derselben Abfahrt. `station_name` wird als Haltestellentitel verwendet, wenn das Feld **Name auf dem Bildschirm** leer ist. Ein dort eingetragener Name überschreibt `station_name`; der Eintrag ist optional. Die Feldbeschriftung stammt von Tessera und lässt sich nicht pro Plugin umbenennen.
 
-Die Verkehrsmittel-Symbole werden standardmäßig aus den Abfahrten erkannt. In den Kacheloptionen kannst du stattdessen mehrere Verkehrsmittel auswählen; eine leere Auswahl aktiviert wieder die automatische Erkennung. Kleine Kacheln passen die Darstellung an den verfügbaren Platz an. Verspätungen erscheinen vor der erwarteten Zeit. Abgesagte Fahrten werden als solche angezeigt.
+Die Verkehrsmittel-Symbole werden standardmäßig aus den Abfahrten erkannt. In den Kacheloptionen kannst du stattdessen mehrere Verkehrsmittel auswählen; eine leere Auswahl aktiviert wieder die automatische Erkennung. Kleine Kacheln passen die Darstellung an den verfügbaren Platz an. Verspätungen erscheinen vor der erwarteten Zeit. Abgesagte Fahrten werden als solche angezeigt. Zu lange Ziele laufen in ihrer Spalte durch. Fahrten mit gleicher Linie, erwarteter Zeit, Verspätung, Gleis und Status werden in der Kachel zusammengefasst; unterschiedliche Ziele erscheinen gemeinsam, getrennt durch „ / “. Das Home-Assistant-Template muss dafür nicht geändert werden.
 
 ## Template-Sensor
 
