@@ -197,8 +197,24 @@ class NextDepartureTile : public tessera::Tile {
       d.expected = array_text(expected, i);
       d.delay = array_text(delays, i);
       d.cancelled = array_text(cancelled_values, i);
-      if (!d.line.empty() || !d.destination.empty() || !d.expected.empty() || cancelled(d))
+      if (d.line.empty() && d.destination.empty() && d.expected.empty() && !cancelled(d)) continue;
+
+      auto same_departure = std::find_if(departures_.begin(), departures_.end(), [&](const Departure &existing) {
+        return existing.type == d.type && existing.line == d.line && existing.track == d.track &&
+               existing.expected == d.expected && existing.delay == d.delay &&
+               existing.cancelled == d.cancelled;
+      });
+      if (same_departure == departures_.end()) {
         departures_.push_back(d);
+      } else if (!d.destination.empty()) {
+        const std::string padded_destinations = " / " + same_departure->destination + " / ";
+        const std::string destination_token = " / " + d.destination + " / ";
+        if (same_departure->destination.empty()) {
+          same_departure->destination = d.destination;
+        } else if (padded_destinations.find(destination_token) == std::string::npos) {
+          same_departure->destination += " / " + d.destination;
+        }
+      }
     }
   }
 
@@ -388,6 +404,9 @@ class NextDepartureTile : public tessera::Tile {
     if (show_destination && row.destination) {
       lv_obj_clear_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
       ui::set_text(row.destination, d.destination);
+      const bool destination_overflows = ui::text_width(d.destination, Font::BODY) > destination_w_;
+      lv_label_set_long_mode(row.destination, destination_overflows ?
+                             LV_LABEL_LONG_SCROLL_CIRCULAR : LV_LABEL_LONG_CLIP);
     } else if (row.destination) {
       lv_obj_add_flag(row.destination, LV_OBJ_FLAG_HIDDEN);
     }
